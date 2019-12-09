@@ -26,13 +26,13 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-        IRT_plot_min_max17okt19
+    IRT_plot_min_max17okt19
     if HighestFrameNr > 1
         filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
         timeindend=max(strfind(filename, '_'));
         timeindst=timeindend-8;
-        %time38stampstr=replace(filename(timeindst:timeindend-1), '_', ':')
+        %timestampstr=replace(filename(timeindst:timeindend-1), '_', ':')
         timestampstr=erase(filename(timeindst:timeindend-1), '_');
         %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')
         for m = 1:3
@@ -43,8 +43,6 @@ for k = 1:length(filenames)
 end
 T = cell2table(output);
 writetable(T,strcat(myfilepath, 'output.csv'))
-
-%%%plot per day
 
 %color=[0 0 0]
 uniquedates = unique(output(3:size(output, 1),10));

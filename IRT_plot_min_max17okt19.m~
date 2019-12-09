@@ -146,13 +146,13 @@ saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
 %imagesc(frame_array(:,:,checkframe), [minfa maxfa])% draw frame with framenumer to check)
 %max_check_frame = max(max(frame_array(:,:,checkframe)))
 %% next step determine threshold
-% minthresh = 30; % below 32, eye not visible, bird flying or out of view
-% maxthresh = maxfa;
-% maxPFrthreshY=maxPFr(maxPFr< maxthresh & maxPFr>minthresh);
-% maxPFrthreshX=find((maxPFr< maxthresh & maxPFr>minthresh));
-% plot(maxPFrthreshX,maxPFrthreshY)
-% %hold on
-% %plot(maxPFr)
+minthresh = 30; % below 32, eye not visible, bird flying or out of view
+maxthresh = maxfa;
+maxPFrthreshY=maxPFr(maxPFr< maxthresh & maxPFr>minthresh);
+maxPFrthreshX=find((maxPFr< maxthresh & maxPFr>minthresh));
+plot(maxPFrthreshX,maxPFrthreshY)
+%hold on
+%plot(maxPFr)
 end
 %%
 %save max value
