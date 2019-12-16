@@ -1,14 +1,19 @@
 %%script for loading,viewing, calculating data from FLIR Infrared thermography camera (IRT FLIR 430c ) 
 %%by Sita ter Haar & Chirs Klink
-%%previous version version 11okt19
-
 
 %edit since 15 apr: commented out tiff. not necessary for now
-% semicolons after lines to prevent printing
+%9dec restriction that 3 max values are at least 10 (more?) pixels apart
+%not anymore, now90,95 and 100%
+%added buttons, not working yet
+
+
+%TODO pushbutton:
+    %-function
+    %-size
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
-Z=load([myfilepath filename]); % load the data
+Z=load([myfilepath '/' filename]); % load the data
 
 %% find how many frames exist in this data-file
 HighestFrameFound = false; % switch for loop below
@@ -62,14 +67,38 @@ for f=1:HighestFrameNr % for each frame, extract the max value and place in arra
 end
  
 maxsorted=sort(maxPFr, 'descend');
-maxThree = []
+maxThree = [] %with at least 10 pixels apart. see below
 outrow=1
 
 mfig = figure; % open figure window
+%create panel and buttons
+figp = uipanel('Title','Main Panel','FontSize',10,...
+             'BackgroundColor','white',...
+             'Position',[.05 .05 .9 .2]);
+pos = getpixelposition(figp); %// gives x left, y bottom, width, height
 ishghandle(mfig)
+posshift= (pos(1) + (pos(3)-pos(1))/3)
+figsubpb1 = uicontrol('Parent',figp,'String','nr1',...
+    'Position',[pos(1) 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
+figsubpb2 = uicontrol('Parent',figp,'String','nr2',...
+    'Position',[posshift 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
+figsubpb3 = uicontrol('Parent',figp,'String','nr3',...
+    'Position',[posshift*2 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
 
-%TODO add restriction that 3 max values are at least 10 (more?) pixels apart
-for j = maxsorted(1:3)  
+%max10perc=maxPFr(maxPFr>threshold);
+threshold=maxsorted(int16(length(maxsorted))*0.1) %threshold max 10%
+indMax10perc=find(maxPFr>threshold)
+max10perc=maxPFr(indMax10perc)
+indthresh=find(maxsorted==threshold) %index of threshold in maxsorted
+% todo: exclude extreme values 
+
+
+%9dec restriction that 3 max values are at least 10 (more?) pixels apart
+% for j = maxsorted(1:10:30)  %from 1 to 30 steps of (90%) and inbetween
+% (95%)
+% now max (100%) threshold (90
+for j = maxsorted(1:int16(indthresh(1)/3):(indthresh(1)-1))
+    %maxsorted(1:(int16(threshold/3)):threshold)
     % find which frame has min and which frames have the 3 highest values (top
     % 3) v in vmin and vmax means frame number 
     [rmin,cmin,vmin] = ind2sub(size(frame_array),find(frame_array == minfa));
@@ -87,14 +116,30 @@ for j = maxsorted(1:3)
     %place marker at max value
     hold on
     
-    maxframe=plot(cmax,rmax,'r*');
+    maxframe=plot(cmax(1),rmax(1),'r*'); %(1) behind if multiple rames
+     %
+   % bla = uicontrol(gcf,...
+    %button = uicontrol (mfig, 'style','pushbutton')
+    
+    %figsubp = uipanel('Parent',figp,'Title','Subpanel','FontSize',8,...
+     %         %'Position',[.4 .1 .5 .5]);
+      %        'Position',[outrow/10 .1 .5 .5]);
+    %figsubpb = uicontrol('Parent',figsubp,'String','Push here',...
+    figsubpb = uicontrol('Parent',figp,'String','Push here',...
+               'Units', 'normalized','Position',[pos(1)*outrow pos(2) (pos(3)/3) (pos(4)/3)]); %'Position',[1.8*(outrow*5) 18 72 36])
+            
+    %text = uicontrol (mfig, 'style','pushbutton')
+    [filepath,name,ext] = fileparts(filename)
+    saveas(maxframe,strcat(myfilepath,'maxframe_',name),'tiff') %myfilepath refers to IRT_multiplefiles
+
+%... Select eye with cursor and export to workspace as 'eye_min'. ...
     axis square
     title({[' max-' num2str(outrow)]})
     %title({filename, strcat('\ max\-', num2str(outrow))})
     outrow=outrow+1
     
 end
-title({filename(2:end)})
+sgtitle({filename(2:end)})
 
 % max(maxPFr) is same as maxfa
 mmfig = figure; % open figure window
@@ -105,11 +150,6 @@ AvMax = mean(maxPFr);
 %and plots the max 10% of values between minofmax and max --> not really?
 %minofmax not used
 %SO NOT between min and max, because then you include background values
-threshold=maxsorted(int16(length(maxsorted)*0.1))
-
-%max10perc=maxPFr(maxPFr>threshold);
-indMax10perc=find(maxPFr>threshold)
-max10perc=maxPFr(indMax10perc)
 
 ishghandle(mmfig)
 plot(maxPFr, 'DisplayName', 'max')
@@ -122,6 +162,7 @@ line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--')
 xlabel('frame number')
 ylabel('temperature(C)')
 title({filename(2:end)})
+ylim([minfa maxfa+2])
 hold off
 legend('show')
  %%
@@ -146,13 +187,13 @@ saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
 %imagesc(frame_array(:,:,checkframe), [minfa maxfa])% draw frame with framenumer to check)
 %max_check_frame = max(max(frame_array(:,:,checkframe)))
 %% next step determine threshold
-minthresh = 30; % below 32, eye not visible, bird flying or out of view
-maxthresh = maxfa;
-maxPFrthreshY=maxPFr(maxPFr< maxthresh & maxPFr>minthresh);
-maxPFrthreshX=find((maxPFr< maxthresh & maxPFr>minthresh));
-plot(maxPFrthreshX,maxPFrthreshY)
-%hold on
-%plot(maxPFr)
+% minthresh = 30; % below 32, eye not visible, bird flying or out of view
+% maxthresh = maxfa;
+% maxPFrthreshY=maxPFr(maxPFr< maxthresh & maxPFr>minthresh);
+% maxPFrthreshX=find((maxPFr< maxthresh & maxPFr>minthresh));
+% plot(maxPFrthreshX,maxPFrthreshY)
+% %hold on
+% %plot(maxPFr)
 end
 %%
 %save max value

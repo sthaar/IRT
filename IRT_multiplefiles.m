@@ -4,13 +4,24 @@
 %from FLIR Infrared thermography camera (IRT FLIR 430c ), exported as .mat files using researchIR 
 %by Sita ter Haar
 %written in MATLAB 2017a Windows 7
-%make sure script IRT_plot_min_max17okt19 (line 23) and datefromFilename.m are in the same folder
+%make sure script IRT_plot_min_max (line 23) and datefromFilename.m are in the same folder
 %as this one.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%edits27nov19: adjusted to matlab 2019
 
+%TODO
+    %add prompt for maxthreshold. (test maxthresh with testhighthresh.m)
+    %to function:
+        %checkframe.m
+        %testhighthresh.m --> evenly distribut subplots
+        
+%edit ..dec19: plotjes goed, matlab2019
+%edit 15dec19: added button
+        %maxThree plots is now 100, 95 and 90% values
+        %checkframe.m (for checking single frame)
+        %testhighthresh.m (for high values outside 'eye'-range)
+        
 clear
 myfilepath = uigetdir %gets directory);
 filenames = dir('*.mat'); %gets all mat files in struct
@@ -22,11 +33,12 @@ output(1,1) = {matlab.desktop.editor.getActiveFilename};
 output(2,:) = headers;
 for k = 1:length(filenames)
     %filename=strcat('\',filenames(k).name)
-    filename=strcat('/',filenames(k).name)
+    %filename=strcat('/',filenames(k).name)
+    filename=strcat(filenames(k).name);
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-        IRT_plot_min_max17okt19
+    IRT_plot_min_max
     if HighestFrameNr > 1
         filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
@@ -36,6 +48,7 @@ for k = 1:length(filenames)
         timestampstr=erase(filename(timeindst:timeindend-1), '_');
         %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')
         for m = 1:3
+            %maxThree is now 90, 95 and 100% values (15dec19)
           appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, minfa, AvMax, 0, m, timestampstr, filedate};
             output(end+1,:) = appendline;
         end
