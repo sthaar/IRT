@@ -10,6 +10,8 @@
 %TODO pushbutton:
     %-function
     %-size
+    
+    %function IRT_plot_min_max(filename)
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
@@ -63,11 +65,12 @@ maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 maxPFr = zeros(1,HighestFrameNr);%create empty array
 for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
     maxPFr(f) = max(max(frame_array(:,:,f)));%absolute max of frame
-    minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
+    %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame, so not informative
+    minPFr(f)= min(min(frame_array(:,:,f))); % minimum per frame, so background
 end
  
 maxsorted=sort(maxPFr, 'descend');
-maxThree = [] %with at least 10 pixels apart. see below
+maxThree = [] 
 outrow=1
 
 mfig = figure; % open figure window
@@ -85,19 +88,23 @@ figsubpb2 = uicontrol('Parent',figp,'String','nr2',...
 figsubpb3 = uicontrol('Parent',figp,'String','nr3',...
     'Position',[posshift*2 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
 
-%max10perc=maxPFr(maxPFr>threshold);
-threshold=maxsorted(int16(length(maxsorted))*0.1) %threshold max 10%
+%maxthreshold above which not natural eye temperature is expected. check
+%with testhighthresh
+extremesexcluded=maxsorted(maxsorted<maxeye)
+threshold=extremesexcluded(int16(length(extremesexcluded))*0.1) %threshold max 10%
 indMax10perc=find(maxPFr>threshold)
 max10perc=maxPFr(indMax10perc)
 indthresh=find(maxsorted==threshold) %index of threshold in maxsorted
-% todo: exclude extreme values 
-
+%%todo: check of bovenstaande regel maxsorted of extremesexcluded moet zijn
 
 %9dec restriction that 3 max values are at least 10 (more?) pixels apart
 % for j = maxsorted(1:10:30)  %from 1 to 30 steps of (90%) and inbetween
 % (95%)
 % now max (100%) threshold (90
-for j = maxsorted(1:int16(indthresh(1)/3):(indthresh(1)-1))
+%
+titlearray = {'100%', '95%', '90%'}
+    
+for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
     %maxsorted(1:(int16(threshold/3)):threshold)
     % find which frame has min and which frames have the 3 highest values (top
     % 3) v in vmin and vmax means frame number 
@@ -106,7 +113,7 @@ for j = maxsorted(1:int16(indthresh(1)/3):(indthresh(1)-1))
     % create variable maxThree for output, one row per frame (outrow), first column
     % vmax = frame nr, 2nd column j is max value of that frame
    %!!fix (1)
-    maxThree(outrow,1) = vmax(1)%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    maxThree(outrow,1) = vmax(1) %the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
     maxThree(outrow,2) = j
    
     subplot(1,3,outrow)
@@ -117,6 +124,7 @@ for j = maxsorted(1:int16(indthresh(1)/3):(indthresh(1)-1))
     hold on
     
     maxframe=plot(cmax(1),rmax(1),'r*'); %(1) behind if multiple rames
+    
      %
    % bla = uicontrol(gcf,...
     %button = uicontrol (mfig, 'style','pushbutton')
@@ -134,12 +142,14 @@ for j = maxsorted(1:int16(indthresh(1)/3):(indthresh(1)-1))
 
 %... Select eye with cursor and export to workspace as 'eye_min'. ...
     axis square
-    title({[' max-' num2str(outrow)]})
-    %title({filename, strcat('\ max\-', num2str(outrow))})
-    outrow=outrow+1
+%    title({[' max-' num2str(outrow)]})
+title(titlearray(outrow))    
+outrow=outrow+1
     
 end
-sgtitle({filename(2:end)})
+%sgtitle({filename(2:end)})
+sgtitle({filename})
+hold off
 
 % max(maxPFr) is same as maxfa
 mmfig = figure; % open figure window
@@ -154,11 +164,15 @@ AvMax = mean(maxPFr);
 ishghandle(mmfig)
 plot(maxPFr, 'DisplayName', 'max')
 hold on
-plot(minOfMaxPFr, 'DisplayName', 'min of max')
+%plot(minOfMaxPFr, 'DisplayName', 'min of max')
+plot(MinPFr, 'DisplayName', 'min');
 %plot(xymax10p, 'DisplayName', 'max10p')
 %plot(indMax10perc,max10perc, '--', 'DisplayName', 'max10p')
 plot(indMax10perc,max10perc, 'g*', 'DisplayName', 'max10p')
-line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--')
+threeImgs=plot(maxThree(:,1),maxThree(:,2), 'r*', 'DisplayName', 'threeImgs') % red dots for the three images plotted before
+
+line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh')
+line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove')
 xlabel('frame number')
 ylabel('temperature(C)')
 title({filename(2:end)})
@@ -168,6 +182,20 @@ legend('show')
  %%
 [filepath,name,ext] = fileparts(filenames(k).name)
 saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
+end
+
+usr = input('continue? Y or redo? R', 's')
+
+test=frame_array(:,:,[maxThree(:,1)])
+
+
+
+
+
+
+
+
+
 
 %... Select eye with cursor and export to workspace as 'eye_min'. ...
 %%
@@ -180,24 +208,6 @@ saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
 %%
 %eye_max_value = frame_array(eye_max.Position(2),eye_max.Position(1),vmax)
 %wing_max_value = frame_array(wing_max.Position(2),wing_max.Position(1),vmax)
-
-%% check specific frame
-
-%checkframe = 148 %framenumer to check
-%imagesc(frame_array(:,:,checkframe), [minfa maxfa])% draw frame with framenumer to check)
-%max_check_frame = max(max(frame_array(:,:,checkframe)))
-%% next step determine threshold
-% minthresh = 30; % below 32, eye not visible, bird flying or out of view
-% maxthresh = maxfa;
-% maxPFrthreshY=maxPFr(maxPFr< maxthresh & maxPFr>minthresh);
-% maxPFrthreshX=find((maxPFr< maxthresh & maxPFr>minthresh));
-% plot(maxPFrthreshX,maxPFrthreshY)
-% %hold on
-% %plot(maxPFr)
-end
-%%
-%save max value
-%save plots
 
 %%
 %manual options below

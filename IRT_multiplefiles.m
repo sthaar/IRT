@@ -3,12 +3,10 @@
 %%script for loading,viewing, calculating multiple images from multiple video's 
 %from FLIR Infrared thermography camera (IRT FLIR 430c ), exported as .mat files using researchIR 
 %by Sita ter Haar
-%written in MATLAB 2017a Windows 7
+%written in MATLAB 2017a Windows 7, adjusted to matlab2019 in linux mint
 %make sure script IRT_plot_min_max (line 23) and datefromFilename.m are in the same folder
 %as this one.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 %TODO
     %add prompt for maxthreshold. (test maxthresh with testhighthresh.m)
@@ -23,22 +21,28 @@
         %testhighthresh.m (for high values outside 'eye'-range)
         
 clear
-myfilepath = uigetdir %gets directory);
-filenames = dir('*.mat'); %gets all mat files in struct
+prompt = 'max eye value'
+maxeye = input(prompt);
+
+myfilepath = uigetdir() %gets directory);
+filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
+
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
 headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
 output=cell(1, length(headers));
 output(1,1) = {matlab.desktop.editor.getActiveFilename};
+output(1,2) = {maxeye};
 output(2,:) = headers;
+run=1
 for k = 1:length(filenames)
     %filename=strcat('\',filenames(k).name)
-    %filename=strcat('/',filenames(k).name)
+    %filename=strcat('/',filenames(k).name)   
     filename=strcat(filenames(k).name);
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    IRT_plot_min_max
+    IRT_plot_min_max        
     if HighestFrameNr > 1
         filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
@@ -88,5 +92,5 @@ for n = 3:(size(output, 1))
     
 end
 xlim([0 24]);
-ylim([35 45]);
+ylim([35 40]);
 xlabel('time (h) from 0 to 24');
