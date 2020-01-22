@@ -29,7 +29,7 @@ filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
 
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
-headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
+headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date', 'select'}
 output=cell(1, length(headers));
 output(1,1) = {matlab.desktop.editor.getActiveFilename};
 output(1,2) = {maxeye};
@@ -42,8 +42,8 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    IRT_plot_min_max        
-    if HighestFrameNr > 1
+    [maxThree, MinofMax, minfa, AvMax, select]=IRT_plot_min_max(maxeye, myfilepath, filename)        
+    %if HighestFrameNr > 1
         filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
         timeindend=max(strfind(filename, '_'));
@@ -53,10 +53,10 @@ for k = 1:length(filenames)
         %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')
         for m = 1:3
             %maxThree is now 90, 95 and 100% values (15dec19)
-          appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, minfa, AvMax, 0, m, timestampstr, filedate};
+          appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, minfa, AvMax, 0, m, timestampstr, filedate, select(m)};
             output(end+1,:) = appendline;
         end
-    end
+   % end
 end
 T = cell2table(output);
 writetable(T,strcat(myfilepath, 'output.csv'))

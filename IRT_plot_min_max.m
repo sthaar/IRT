@@ -5,13 +5,27 @@
 %9dec restriction that 3 max values are at least 10 (more?) pixels apart
 %not anymore, now90,95 and 100%
 %added buttons, not working yet
-
-
-%TODO pushbutton:
-    %-function
-    %-size
     
-    %function IRT_plot_min_max(filename)
+function [maxThree, MinofMax, minfa, AvMax, select] = IRT_plot_min_max(maxeye, myfilepath, filename)
+%%set functions for buttons
+%function button_call(varargin)
+%        if figsubpb1.Value == true
+%            select(1) = 1
+%        elseif figsubpb2.Value == true
+%            select(2) = 1
+%        elseif figsubpb3.Value == true
+%            select(3) = 1
+%        elseif figsubpb4.Value == true
+%            select(1:3) = 1
+%        end
+%end
+
+%function pb_kpf(varargin)
+%    if strcmp(varargin{1,2}.Key, '1'|'2'|'3'|'space') 
+%            pb_call(varargin{:})
+%    end
+%end 
+   
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
@@ -39,7 +53,9 @@ if HighestFrameNr >1
     for f=1:HighestFrameNr
         frame_array(:,:,f) = eval(['Z.Frame' num2str(f)]); % put frames in
     end
-
+    usr = 'r'
+    rerun = 0
+    while usr == 'r'
 %% animate in implay (needs to be in 0-255 range)%outcommented in version 23okt18
 % fa=frame_array; % duplicate array (think about memory: don't do this if you don't need it)
 % minfa=min(min(min(fa,[],1),[],2),[],3); % get minimal temp value
@@ -70,31 +86,21 @@ for f=1:HighestFrameNr % for each frame, extract the max value and place in arra
 end
  
 maxsorted=sort(maxPFr, 'descend');
-maxThree = [] 
-outrow=1
+maxThree = [] ;
+outrow=1;
 
+%mfig = figure; % open figure window
 mfig = figure; % open figure window
-%create panel and buttons
-figp = uipanel('Title','Main Panel','FontSize',10,...
-             'BackgroundColor','white',...
-             'Position',[.05 .05 .9 .2]);
-pos = getpixelposition(figp); %// gives x left, y bottom, width, height
 ishghandle(mfig)
-posshift= (pos(1) + (pos(3)-pos(1))/3)
-figsubpb1 = uicontrol('Parent',figp,'String','nr1',...
-    'Position',[pos(1) 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
-figsubpb2 = uicontrol('Parent',figp,'String','nr2',...
-    'Position',[posshift 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
-figsubpb3 = uicontrol('Parent',figp,'String','nr3',...
-    'Position',[posshift*2 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
 
+%create panel and buttons
 %maxthreshold above which not natural eye temperature is expected. check
 %with testhighthresh
-extremesexcluded=maxsorted(maxsorted<maxeye)
-threshold=extremesexcluded(int16(length(extremesexcluded))*0.1) %threshold max 10%
-indMax10perc=find(maxPFr>threshold)
-max10perc=maxPFr(indMax10perc)
-indthresh=find(maxsorted==threshold) %index of threshold in maxsorted
+extremesexcluded=maxsorted(maxsorted<maxeye);
+threshold=extremesexcluded(int16(length(extremesexcluded))*0.1); %threshold max 10%
+indMax10perc=find(maxPFr>threshold);
+max10perc=maxPFr(indMax10perc);
+indthresh=find(maxsorted==threshold); %index of threshold in maxsorted
 %%todo: check of bovenstaande regel maxsorted of extremesexcluded moet zijn
 
 %9dec restriction that 3 max values are at least 10 (more?) pixels apart
@@ -102,7 +108,7 @@ indthresh=find(maxsorted==threshold) %index of threshold in maxsorted
 % (95%)
 % now max (100%) threshold (90
 %
-titlearray = {'100%', '95%', '90%'}
+titlearray = {'100%', '95%', '90%'};
     
 for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
     %maxsorted(1:(int16(threshold/3)):threshold)
@@ -113,8 +119,8 @@ for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
     % create variable maxThree for output, one row per frame (outrow), first column
     % vmax = frame nr, 2nd column j is max value of that frame
    %!!fix (1)
-    maxThree(outrow,1) = vmax(1) %the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
-    maxThree(outrow,2) = j
+    maxThree(outrow,1) = vmax(1) ;%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    maxThree(outrow,2) = j;
    
     subplot(1,3,outrow)
     im=frame_array(:,:,vmax(1));
@@ -123,8 +129,9 @@ for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
     %place marker at max value
     hold on
     
-    maxframe=plot(cmax(1),rmax(1),'r*'); %(1) behind if multiple rames
-    
+    %maxframe=plot(cmax(1),rmax(1),'r*'); %(1) behind if multiple frames
+    maxframe=plot(cmax(1),rmax(1),'r*','MarkerSize', 2); %(1) behind if multiple frames)
+    assignin('base', 'maxframe', maxframe)
      %
    % bla = uicontrol(gcf,...
     %button = uicontrol (mfig, 'style','pushbutton')
@@ -133,13 +140,11 @@ for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
      %         %'Position',[.4 .1 .5 .5]);
       %        'Position',[outrow/10 .1 .5 .5]);
     %figsubpb = uicontrol('Parent',figsubp,'String','Push here',...
-    figsubpb = uicontrol('Parent',figp,'String','Push here',...
-               'Units', 'normalized','Position',[pos(1)*outrow pos(2) (pos(3)/3) (pos(4)/3)]); %'Position',[1.8*(outrow*5) 18 72 36])
+%    figsubpb = uicontrol('Parent',figp,'String','Push here',...
+ %              'Units', 'normalized','Position',[pos(1)*outrow pos(2) (pos(3)/3) (pos(4)/3)]); %'Position',[1.8*(outrow*5) 18 72 36])
             
     %text = uicontrol (mfig, 'style','pushbutton')
-    [filepath,name,ext] = fileparts(filename)
-    saveas(maxframe,strcat(myfilepath,'maxframe_',name),'tiff') %myfilepath refers to IRT_multiplefiles
-
+    
 %... Select eye with cursor and export to workspace as 'eye_min'. ...
     axis square
 %    title({[' max-' num2str(outrow)]})
@@ -148,8 +153,10 @@ outrow=outrow+1
     
 end
 %sgtitle({filename(2:end)})
-sgtitle({filename})
+sgtitle({filename, 'rerun =', rerun})
 hold off
+[filepath,name,ext] = fileparts(filename)
+saveas(maxframe,strcat(myfilepath,'/maxframe_',name),'tiff') %myfilepath refers to IRT_multiplefiles
 
 % max(maxPFr) is same as maxfa
 mmfig = figure; % open figure window
@@ -162,14 +169,14 @@ AvMax = mean(maxPFr);
 %SO NOT between min and max, because then you include background values
 
 ishghandle(mmfig)
-plot(maxPFr, 'DisplayName', 'max')
+plot(maxPFr, '.','DisplayName', 'max')
 hold on
 %plot(minOfMaxPFr, 'DisplayName', 'min of max')
-plot(MinPFr, 'DisplayName', 'min');
+plot(minPFr, '.','DisplayName', 'min');
 %plot(xymax10p, 'DisplayName', 'max10p')
 %plot(indMax10perc,max10perc, '--', 'DisplayName', 'max10p')
 plot(indMax10perc,max10perc, 'g*', 'DisplayName', 'max10p')
-threeImgs=plot(maxThree(:,1),maxThree(:,2), 'r*', 'DisplayName', 'threeImgs') % red dots for the three images plotted before
+threeImgs=plot(maxThree(:,1),maxThree(:,2), 'r*', 'MarkerSize', 3, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
 
 line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh')
 line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove')
@@ -180,18 +187,113 @@ ylim([minfa maxfa+2])
 hold off
 legend('show')
  %%
-[filepath,name,ext] = fileparts(filenames(k).name)
+%[filepath,name,ext] = fileparts(filenames(k).name)
 saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
+
+
+usr = input('next? y or redo? r', 's')
+        if usr == 'r'
+            frame_array(:,:,[maxThree(:,1)])=NaN;
+            frame_array(maxThree(1,1))
+            rerun =rerun+1
+            close all
+        elseif usr == 'y'
+            continue
+        else
+            'wrong input, only y or r allowed'
+            usr = input('next? y or redo? r', 's')
+        end
+    end
+end
+%test=frame_array(:,:,[maxThree(:,1)]); for next step I should make
+%maxThree NaN (what now is test)
+%% buttons
+
+
+
+%%oud:
+%figp = uifigure('Title','Main Panel','FontSize',10,...
+%             'BackgroundColor','white',...
+%             'Position',[.05 .05 .9 .2]);
+%bg = uibuttongroup(bfig,'Position',[5 5 123 100], 'ButtonDownFcn',
+%@butnfunc); werkt niet
+%bg = uibuttongroup(bfig,'Position',[5 5 123 100], 'Selection',@bselection); https://nl.mathworks.com/help/matlab/ref/uibuttongroup.html                   
+%ButtonDownFcn?
+
+%%uitproberen
+%pos = getpixelposition(bg); %// gives x left, y bottom, width, height
+%posshift = (pos(1) + (pos(3)-pos(1))/3);
+%figsubpb1 = uitogglebutton('Parent',figp,...
+%'Position',[pos(1) 18 72 36], 'call',@button_call); %'Position',[1.8*(outrow*5) 18 72 36])
+%callback function in uitogglebutton? nee wel in buttongroup
+%https://nl.mathworks.com/help/matlab/ref/uibuttongroup.html 
+%misschien betern zoals tb = uicontrol(gtfig, 'Style', 'togglebutton', 'String', 'Start/Stop', 'tag', 'togglebutton1', 'Position', [30 20 100 30])
+%set(tb,'Callback',@fun1); %https://nl.mathworks.com/matlabcentral/answers/182628-how-can-i-get-the-value-of-toggle-button-uicontrol
+
+%%%
+
+%oud    
+% bfig = uifigure('Position',[140 140 140 140]);
+% bg = uibuttongroup(bfig,'Position',[5 5 123 100]);
+% figsubpb1 = uitogglebutton(bg, 'Position',[10 75 100 22]); %'Position',[1.8*(outrow*5) 18 72 36])   
+% figsubpb2 = uitogglebutton(bg, 'Position',[10 50 100 22]); %'Position',[1.8*(outrow*5) 18 72 36])
+% figsubpb3 = uitogglebutton(bg, 'Position',[10 25 100 22]); %'Position',[1.8*(outrow*5) 18 72 36])
+% figsubpb4 = uitogglebutton(bg, 'Position',[10 1 100 22]); %'Position',[1.8*(outrow*5) 18 72 36])
+% 
+% figsubpb1.Text = 'n1';
+% figsubpb2.Text = 'n2';
+% figsubpb3.Text = 'n3';
+% figsubpb4.Text = 'all';
+% 
+% buttons = [figsubpb1 figsubpb2 figsubpb3 figsubpb4]
+select=[0 0 0]
+selectimages = 0
+%try catch
+while selectimages == 0
+    %inputdlg({'Name','Telephone','Account'},.
+    prompt = {'im1','im2','im3'}
+    dlgtitle='which images do you want to save? enter 1 to save data, 0 for not. hit enter when done)'
+    dims = [1 35];
+    %n=inputdlg(prompt)
+    definput = {'1','1','1'}
+n=inputdlg(prompt, dlgtitle, dims, definput)
+    try
+        for nn = 1:3
+            select(nn)=eval(n{nn})
+        end
+        selectimages = 1 
+ %       nn=eval(n{1})
+  %      if isnumeric(nn) 
+   %         nn=eval(n{1})
+    %        select(nn) = 1
+     %       selectimages = 1
+      %  else
+      %      warning('wrong input, only 1,2,3 or combination allowed')
+%            selectimages = 0
+       % end
+    catch
+        warning('wrong input, only 1,2,3 or combination allowed')
+        selectimages = 0
+    end
 end
 
-usr = input('continue? Y or redo? R', 's')
+%%oud
+% for n = 1:4
+%         if n<4 & buttons(n).Value == 1
+%                 select(n) = 1
+%         elseif buttons(4).Value == 1
+%                 select(1:3) = 1
+%         end
+% end
 
-test=frame_array(:,:,[maxThree(:,1)])
 
+%% dit kan ik aanzetten als ik geen semiauto wil. delete(bfig)
+end
 
-
-
-
+function butnfunc(varargin)
+    
+end
+%waitfor(bfig)
 
 
 
