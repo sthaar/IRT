@@ -9,16 +9,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %TODO
-    %add prompt for maxthreshold. (test maxthresh with testhighthresh.m)
-    %to function:
-        %checkframe.m
-        %testhighthresh.m --> evenly distribut subplots
-        
-%edit ..dec19: plotjes goed, matlab2019
-%edit 15dec19: added button
-        %maxThree plots is now 100, 95 and 90% values
-        %checkframe.m (for checking single frame)
-        %testhighthresh.m (for high values outside 'eye'-range)
         
 clear
 prompt = 'max eye value'
