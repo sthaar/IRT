@@ -19,7 +19,7 @@ filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
 
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
-headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date', 'select'}
+headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date', 'select'};
 output=cell(1, length(headers));
 output(1,1) = {matlab.desktop.editor.getActiveFilename};
 output(1,2) = {maxeye};
@@ -32,7 +32,7 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    [maxThree, MinofMax, minfa, AvMax, select]=IRT_plot_min_max(maxeye, myfilepath, filename)        
+    [maxThree, MinofMax, minfa, AvMax, select]=IRT_plot_min_max(maxeye, myfilepath, filename) ;       
     %if HighestFrameNr > 1
         filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
@@ -59,7 +59,7 @@ nfig = figure; % open figure window
 ishghandle(nfig);
 hold on
 %plot timestamp (x), by max values (y)
-for n = 3:(size(output, 1))
+for n = 3:(size(output, 1));
     if output{n,10} == uniquedates{1};
         color=[1 0 0];
     elseif output{n,10} == uniquedates{2};
@@ -69,7 +69,9 @@ for n = 3:(size(output, 1))
     else 
         color=[0 0 0];
     end
-    
+    if output{n,11}==0 ;%output(11)=select --> so plot if 1 (selected) but not if 0 (not selected)
+        color(color==0)=0.5;
+    end
     if contains(output(n,1), 'after')==0;
         plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.', 'Color', color);
         %plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.')
@@ -79,7 +81,6 @@ for n = 3:(size(output, 1))
         plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), 'Color', color);
         text((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), [' ' num2str(n-2) 'a'],'Fontsize', 7, 'Color', 'r');
     end
-    
 end
 xlim([0 24]);
 ylim([35 40]);

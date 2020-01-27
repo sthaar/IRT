@@ -14,10 +14,10 @@ minPfr = min(min(test))
 
 %% calculate area where values are above unnatural (45degree celcius)
 [rcheck_max,ccheck_max,~] = ind2sub(size(test),find(test > 39));
-minexr=min(rcheck_max); %minimum index row
-minexc=min(ccheck_max); %minimum index col
-maxexr=max(rcheck_max); %maximum index row
-maxexc=max(ccheck_max); %maximum index col
+minexr=min(rcheck_max)-5; %minimum index row
+minexc=min(ccheck_max)-5; %minimum index col
+maxexr=max(rcheck_max)+5; %maximum index row
+maxexc=max(ccheck_max)+5; %maximum index col
 
 w=1;
 while w==1
@@ -25,13 +25,22 @@ while w==1
     fig = figure; % open figure window
     ishghandle(fig)
     imagesc(test,[minPfr maxPfr]) 
-    %maxframe=plot(cmax(1),rmax(1),'r*')
+  %  
     hold on
-    plot(minexc, minexr, 'r*')
-    plot(maxexc, minexr, 'r*')
-    plot(minexc, maxexr, 'r*')
-    plot(maxexc, maxexr, 'r*')
-
+    %[x y w h])
+   % annotation('rectangle',[minexc,maxexr, (maxexc-minexc),(maxexr-minexr)],...
+   %      'LineWidth',1,'LineStyle','--')
+   %  annotation('rectangle',[0.5,0.5, 0.1,0.1],...
+   %      'LineWidth',1,'LineStyle','--')
+   % x = [minexc, maxexc, maxexc, minexc, minexc];
+   % y = [minexr, minexr, maxexr, maxexr, minexr];
+   % plot(x, y, 'b-', 'LineWidth', 3);
+    
+    plot(minexc, minexr, 'g*')
+    plot(maxexc, minexr, 'g*')
+    plot(minexc, maxexr, 'g*')
+    plot(maxexc, maxexr, 'g*')
+maxframe=plot(cmax(1),rmax(1),'r*')
     %ask user if exclusion area is ok, if yes proceed if not go back
     inp =input('exclude part? (y/n/) or change dimensions? (c)','s');
     if inp =='y'
@@ -41,8 +50,8 @@ while w==1
         fig = figure; % open figure window
         ishghandle(fig)
         imagesc(test,[minPfr maxPfr]) 
-        %maxframe=plot(cmax(1),rmax(1),'r*')
         hold on
+        plot(cmax(1),rmax(1),'r*')
         input2 = input('ok? y/n','s')
         %ask again if ok and proceed
         if input2 == 'y'
@@ -80,4 +89,5 @@ while w==1
         w=1;
     end
 end
-
+hold off
+delete(fig)

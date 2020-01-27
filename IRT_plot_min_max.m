@@ -56,8 +56,8 @@ if HighestFrameNr >1
     end
 end
 
-usr = 'r'
-rerun = 0
+usr = 'r';
+rerun = 0;
 while usr == 'r'
     %% animate in implay (needs to be in 0-255 range)%outcommented in version 23okt18
     % fa=frame_array; % duplicate array (think about memory: don't do this if you don't need it)
@@ -95,25 +95,14 @@ while usr == 'r'
     
     maxsorted=sort(maxPFr, 'descend');
     maxThree = [] ;
-    outrow=1;
-    
-    %mfig = figure; % open figure window
-    mfig = figure; % open figure window
-    ishghandle(mfig)
-    pos = get(gcf, 'Position'); %// gives x left, y bottom, width, height
-    set(gcf, 'Position',  [pos(1), pos(2), pos(3)*2, pos(4)*2]) %this increases fig size, note that at end whole fig is mvoed to left
-    %create panel and buttons
-    %maxthreshold above which not natural eye temperature is expected. check
-    %with testhighthresh
-    
-    
+%    outrow=0;
+  
     %22jan20
     extremesexcluded=maxsorted(maxsorted<maxeye);
     if isempty(extremesexcluded)== true
-        delete(mfig)
+        %delete(mfig)
         frame_array = checkframe_excludeparts(frame_array);
-        minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
-        maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
+        
          for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
             maxPFr(f) = max(max(frame_array(:,:,f)));%absolute max of frame
             %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame, so not informative
@@ -122,25 +111,40 @@ while usr == 'r'
          %maxPFr(f) = max(max(new_frame_array(:,:,f)));
         maxsorted=sort(maxPFr, 'descend');
         extremesexcluded=maxsorted(maxsorted<maxeye);
-        set(gcf, 'Position',  [pos(1), pos(2), pos(3)*2, pos(4)*2]) %this increases fig size, note that at end whole fig is mvoed to left
     end
-    threshold=extremesexcluded(int16(length(extremesexcluded))*0.1); %threshold max 10%
-    indMax10perc=find(maxPFr>threshold);
-    max10perc=maxPFr(indMax10perc);
-    indthresh=find(maxsorted==threshold); %index of threshold in maxsorted
-    %%todo: check of bovenstaande regel maxsorted of extremesexcluded moet zijn
+%24jan moved from line 99    
+    %mfig = figure; % open figure window
+    mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
+    ishghandle(mfig)
+    pos = get(gcf, 'Position'); %// gives x left, y bottom, width, height
+    set(gcf, 'Position',  [pos(1), pos(2), pos(3)*2, pos(4)*2]) %this increases fig size, note that at end whole fig is mvoed to left
+    %create panel and buttons
+    %maxthreshold above which not natural eye temperature is expected. check
+    %with testhighthresh
     
+    minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
+    maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
+    threshold=extremesexcluded(int16(length(extremesexcluded))*0.1); %threshold max 10%    
+    %changed maxPFr to extremesexcluded
+    %23jan20:
+    %indMax10perc=find(maxPFr>threshold); 
+    %max10perc=maxPFr(indMax10perc);
+    
+    indMax10perc=find(extremesexcluded>threshold);
+    max10perc=extremesexcluded(indMax10perc);
+    indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
+    %%todo: check of bovenstaande regel maxsorted of extremesexcluded moet zijn    
     %9dec restriction that 3 max values are at least 10 (more?) pixels apart
     % for j = maxsorted(1:10:30)  %from 1 to 30 steps of (90%) and inbetween
     % (95%)
     % now max (100%) threshold (90
     %
     titlearray = {'100%', '95%', '90%'};
-    
-    for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))
-        %maxsorted(1:(int16(threshold/3)):threshold)
-        % find which frame has min and which frames have the 3 highest values (top
-        % 3) v in vmin and vmax means frame number
+    outrow=1;
+    for j = extremesexcluded(1:int16(indthresh(1)/3):(indthresh(1)-1))%plot maxthre (90,95&100% values) 
+        %above threshold (10%), 
+        %in steps of 1/3 of the 10% (rounded because of index) of with exteme values excluded
+        
         [rmin,cmin,vmin] = ind2sub(size(frame_array),find(frame_array == minfa));
         [rmax,cmax,vmax] = ind2sub(size(frame_array),find(frame_array == j));
         % create variable maxThree for output, one row per frame (outrow), first column
@@ -158,30 +162,29 @@ while usr == 'r'
         
         %maxframe=plot(cmax(1),rmax(1),'r*'); %(1) behind if multiple frames
         maxframe=plot(cmax(1),rmax(1),'r*','MarkerSize', 2); %(1) behind if multiple frames)
-        assignin('base', 'maxframe', maxframe)
+%        assignin('base', 'maxframe', maxframe)
         %
         % bla = uicontrol(gcf,...
         %button = uicontrol (mfig, 'style','pushbutton')
-        
         %figsubp = uipanel('Parent',figp,'Title','Subpanel','FontSize',8,...
         %         %'Position',[.4 .1 .5 .5]);
         %        'Position',[outrow/10 .1 .5 .5]);
         %figsubpb = uicontrol('Parent',figsubp,'String','Push here',...
         %    figsubpb = uicontrol('Parent',figp,'String','Push here',...
         %              'Units', 'normalized','Position',[pos(1)*outrow pos(2) (pos(3)/3) (pos(4)/3)]); %'Position',[1.8*(outrow*5) 18 72 36])
-        
         %text = uicontrol (mfig, 'style','pushbutton')
-        
         %... Select eye with cursor and export to workspace as 'eye_min'. ...
         axis square
         %    title({[' max-' num2str(outrow)]})
-        title(titlearray(outrow))
-        outrow=outrow+1;
+        %title([titlearray(outrow) 'frame' vmax(1) 'max:' j])    
+        title([titlearray{outrow} ' frame ' num2str(vmax(1)) ' max:' num2str(j)])
+        outrow=outrow+1 
         movegui('west');
     end
+
     %sgtitle({filename(2:end)})
-    sgtitle({filename, 'rerun =', rerun})
-    hold off
+    sgtitle([{filename}, {[' rerun = ' num2str(rerun)]}])
+%    hold off
     [filepath,name,ext] = fileparts(filename);
     saveas(maxframe,strcat(myfilepath,'/maxframe_',name),'tiff') %myfilepath refers to IRT_multiplefiles
     
@@ -213,23 +216,27 @@ while usr == 'r'
     ylim([minfa maxfa+2])
     hold off
     legend('show')
-    movegui('east')
+  %  movegui('east')
     %%
     %[filepath,name,ext] = fileparts(filenames(k).name)
     saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
     
-    
-    usr = input('next? y or redo? r', 's')
-    if usr == 'r'
-        frame_array(:,:,[maxThree(:,1)])=NaN;
-        frame_array(maxThree(1,1))
-        rerun =rerun+1
+    figure(mfig)
+    usr = input('next? y or redo? r', 's');
+    if usr == 'r';
+ %       if j==length(extremesexcluded);
+ %           continue
+  %      else
+        frame_array(:,:,[maxThree(:,1)])=NaN; %exclude values that were just shown and not good enough
+%        frame_array(maxThree(1,1))
+        rerun =rerun+1;
         close all
-    elseif usr == 'y'
+   %     end
+    elseif usr == 'y';
         continue
     else
-        'wrong input, only y or r allowed'
-        usr = input('next? y or redo? r', 's')
+        warning('wrong input, only y or r allowed')
+        usr = input('next? y or redo? r', 's');
     end
 end
 
@@ -300,6 +307,7 @@ while selectimages == 0
         selectimages = 0;
     end
 end
+
 end
 
 %%oud
@@ -319,10 +327,6 @@ end
 %
 % end
 %waitfor(bfig)
-
-
-
-
 
 %... Select eye with cursor and export to workspace as 'eye_min'. ...
 %%
