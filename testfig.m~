@@ -1,0 +1,30 @@
+
+mfig = figure; % open figure window
+figp = uipanel('Title','Main Panel','FontSize',10,...
+             'BackgroundColor','white',...
+             'Position',[.05 .05 .9 .2]);
+%pos = getpixelposition(figp); %// gives x left, y bottom, width, height
+ishghandle(mfig)
+outrow = 1
+ %figsubp = uipanel('Parent',figp,'Title','Subpanel','FontSize',8,...
+     %         %'Position',[.4 .1 .5 .5]);
+      %        'Position',[outrow/10 .1 .5 .5]);
+    %figsubpb = uicontrol('Parent',figsubp,'String','Push here',...
+    %figsubpb = uicontrol('Parent',figp,'String','Push here',...
+    %           'Units', 'normal','Position',[pos(1) pos(2) pos(3) pos(4)]); %'Position',[1.8*(outrow*5) 18 72 36])
+    if outrow > 1
+        posshift= (pos(1) + (pos(3)-pos(1))/3) * (outrow-1)
+    else
+        posshift = pos(1)
+    end
+    figsubpb = uicontrol('Parent',figp,'String','nr5',...
+               'Position',[posshift 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
+    outrow = 2
+    if outrow > 1
+        posshift= (pos(1) + (pos(3)-pos(1))/3) * (outrow-1)
+    else
+        posshift = pos(1)
+    end
+    figsubpb2 = uicontrol('Parent',figp,'String','nr2',...
+               'Position',[posshift 18 72 36]); %'Position',[1.8*(outrow*5) 18 72 36])
+ 

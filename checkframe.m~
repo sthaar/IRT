@@ -1,0 +1,7 @@
+%check one frame by it's number
+frametocheck = uicontainer
+test = frame_array(:,:,5330)
+
+fig = figure; % open figure window
+ishghandle(mfig)
+imagesc(test,[minfa j])%uses minfa and maxfa from IRT_multiplefiles
