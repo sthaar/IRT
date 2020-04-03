@@ -98,23 +98,24 @@ while usr == 'r'
 %    outrow=0;
   
     %22jan20
-    extremesexcluded=maxsorted(maxsorted<maxeye);
+    %extremesexcluded=maxsorted(maxsorted<maxeye);
+    extremesexcluded=maxPFr(maxPFr<maxeye);
     if isempty(extremesexcluded)== true
         %delete(mfig)
-        frame_array = checkframe_excludeparts(frame_array);
-        
+        frame_array = checkframe_excludeparts(frame_array);    
          for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
             maxPFr(f) = max(max(frame_array(:,:,f)));%absolute max of frame
-            %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame, so not informative
             minPFr(f)= min(min(frame_array(:,:,f))); % minimum per frame, so background
          end
-         %maxPFr(f) = max(max(new_frame_array(:,:,f)));
-        maxsorted=sort(maxPFr, 'descend');
-        extremesexcluded=maxsorted(maxsorted<maxeye);
+      %  maxsorted=sort(maxPFr, 'descend');
+%3april something should be fixed?
+    extremesexcluded=maxPFr(maxPFr<maxeye);
     end
-%24jan moved from line 99    
-    %mfig = figure; % open figure window
-    mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
+    
+    maxsorted=sort(maxPFr, 'descend');
+    threshold=maxsorted(int16(length(maxsorted))*0.1); %threshold max 10% 
+ 
+mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
     ishghandle(mfig)
     pos = get(gcf, 'Position'); %// gives x left, y bottom, width, height
     set(gcf, 'Position',  [pos(1), pos(2), pos(3)*2, pos(4)*2]) %this increases fig size, note that at end whole fig is mvoed to left
@@ -124,11 +125,6 @@ while usr == 'r'
     
     minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
     maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
-    threshold=extremesexcluded(int16(length(extremesexcluded))*0.1); %threshold max 10%    
-    %changed maxPFr to extremesexcluded
-    %23jan20:
-    %indMax10perc=find(maxPFr>threshold); 
-    %max10perc=maxPFr(indMax10perc);
     
     indMax10perc=find(extremesexcluded>threshold);
     max10perc=extremesexcluded(indMax10perc);
@@ -191,15 +187,16 @@ while usr == 'r'
     % max(maxPFr) is same as maxfa
     mmfig = figure; % open figure window
     MinofMax = min(maxPFr); % is minimum of all max values (max expected to correlate with eye). if bird is absent 23 or so in Rec-zebrafinch test-000381-179_09_31_16_737_original
-    AvMax = mean(maxPFr);
-    
+%    AvMax = mean(maxPFr);
+ AvMax = mean(extremesexcluded);
+   
     %plots max and min of max values
     %and plots the max 10% of values between minofmax and max --> not really?
     %minofmax not used
     %SO NOT between min and max, because then you include background values
     
-    ishghandle(mmfig)
-    plot(maxPFr, '.','DisplayName', 'max')
+   ishghandle(mmfig)
+    lineplot=plot(maxPFr, '.','DisplayName', 'max')
     hold on
     %plot(minOfMaxPFr, 'DisplayName', 'min of max')
     plot(minPFr, '.','DisplayName', 'min');
@@ -210,16 +207,18 @@ while usr == 'r'
     
     line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh')
     line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove')
+    line([1,length(maxPFr)],[AvMax,AvMax],'Color','black','LineStyle','--', 'DisplayName', 'average_max')
     xlabel('frame number')
     ylabel('temperature(C)')
     title({filename(2:end)})
-    ylim([minfa maxfa+2])
+    %ylim([minfa maxfa+2])
+    ylim([20 45])
     hold off
-    legend('show')
+    legend('show', 'Location', 'northeastoutside')
   %  movegui('east')
     %%
     %[filepath,name,ext] = fileparts(filenames(k).name)
-    saveas(maxframe,strcat(filepath,'maxframe_',name),'tiff')
+    saveas(lineplot, strcat(filepath,'maxframe_',name),'tiff')
     
     figure(mfig)
     usr = input('next? y or redo? r', 's');
