@@ -73,5 +73,5 @@ end
 xlim([0 24])
 ylim([35 45])
 xlabel('time (h) from 0 to 24')
-
+legend('show', 'Location', 'northeastoutside')
 saveas(overview_plot,strcat(myfilepath,'/overview_plot',name),'tiff')

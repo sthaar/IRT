@@ -145,7 +145,7 @@ ishghandle(mmfig)
 
 
 end
-
+close all
 
 %%
 %manual options below
