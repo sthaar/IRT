@@ -1,19 +1,37 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%UNDER DEVELOPMENT
-%%script for loading,viewing, calculating multiple images from multiple video's 
+%%script for automatically loading,viewing, calculating max (and other) values of multiple Infrared Thermography video's 
 %from FLIR Infrared thermography camera (IRT FLIR 430c ), exported as .mat files using researchIR 
 %by Sita ter Haar
-%written in MATLAB 2017a Windows 7
-%make sure script IRT_plot_min_max17okt19 (line 23) and datefromFilename.m are in the same folder
+%written in MATLAB 2019 linux mint 19.2
+%(originally in 2017a Windows 7 adusted to matlab 2019)
+%make sure script IRT_plot_min_max_automatic (line 35) and datefromFilename.m are in the same folder
 %as this one.
+%in progress:
+%-fixing legend overview plot
+%-semiautomatic analysis
+%-multiplotfor more detail
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% 8apr20
+%function of plotinminmax
+%range
+%fixed output labels
+
+%edit since 9 apr 20: 
+%-new graph
+%-stand dev
+%
+
 clear
+%values over 40 excluded 
+maxeye = 40
+
 myfilepath = uigetdir %gets directory
 filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
-headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
+headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
 output=cell(1, length(headers))
 output(1,1) = {matlab.desktop.editor.getActiveFilename};
 output(2,:) = headers;
@@ -23,8 +41,8 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    IRT_plot_min_max_automatic
-    if HighestFrameNr > 1
+    [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic(maxeye, myfilepath, filename);   
+   % if HighestFrameNr > 1
         filedate=datefromFilename(filename)
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
         timeindend=max(strfind(filename, '_'))
@@ -33,45 +51,61 @@ for k = 1:length(filenames)
         timestampstr=erase(filename(timeindst:timeindend-1), '_')
         %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')
         for m = 1:3
-          appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, minfa, AvMax, 0, m, timestampstr, filedate};
+          appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, AvMax, StDmax, minfa, 0, m, timestampstr, filedate};
             output(end+1,:) = appendline;
         end
-    end
+    %end
 end
 T = cell2table(output);
-writetable(T,strcat(myfilepath, 'output.csv'))
+writetable(T,strcat(myfilepath, '/output.csv'))
 
 %color=[0 0 0]
-uniquedates = unique(output(3:length(output),10));
+uniquedates = unique(output(3:length(output),11));
 nfig = figure; % open figure window
 ishghandle(nfig)
 hold on
 %plot timestamp (x), by max values (y)
-for n = 3:(length(output))
-    if output{n,10} == uniquedates{1}
-        color=[1 0 0];
-    elseif output{n,10} == uniquedates{2}
-        color=[0 1 0];
-    elseif output{n,10} == uniquedates{3}
-        color=[0 0 1];
-    else 
-        color=[0 0 0];
-    end
-    
-    if contains(output(n,1), 'after')==0
-        overview_plot=plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.', 'Color', color)
-        %plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.')
-        %text((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), strcat('___', num2str(n-2)),'Fontsize', 7, 'Color', color)
-        text((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), [' ' num2str(n-2)],'Fontsize', 7, 'Color', color)
-    else
-        overview_plot=plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), 'Color', color)
-        text((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), [' ' num2str(n-2) 'a'],'Fontsize', 7, 'Color', 'r')
-    end
-    
-end
-
-xlim([0 24])
-ylim([35 45])
-xlabel('time (h) from 0 to 24')
-legend('show', 'Location', 'northeastoutside')
+% count=0
+% for n = 3:(length(output))
+%     if output{n,11} == uniquedates{1}
+%         color=[1 0 0];
+%     elseif output{n,11} == uniquedates{2}
+%         color=[0 1 0];
+%     elseif output{n,11} == uniquedates{3}
+%         color=[0 0 1];
+%     else 
+%         color=[0 0 0];
+%     end
+%     x=str2num(cell2mat(output(n,10)))/10000;
+%     y=cell2mat(output(n,3));
+%     if contains(output(n,1), 'after')==0
+%         %x=str2num(cell2mat(output(n,9)))/10000;
+%         %y=cell2mat(output(n,3));
+%         %overview_plot=plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.', 'Color', color)
+%         overview_plot=plot(x,y, '.', 'Color', color);
+%         
+%         %plot((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), '.')
+%         %text((str2num(cell2mat(output(n,9)))/10000), cell2mat(output(n,3)), strcat('___', num2str(n-2)),'Fontsize', 7, 'Color', color)
+%         text((str2num(cell2mat(output(n,10)))/10000), cell2mat(output(n,3)), [' ' num2str(n-2)],'Fontsize', 7, 'Color', color);
+%     else
+%         overview_plot=plot((str2num(cell2mat(output(n,10)))/10000), cell2mat(output(n,3)), 'Color', color);
+%         text((str2num(cell2mat(output(n,10)))/10000), cell2mat(output(n,3)), [' ' num2str(n-2) 'a'],'Fontsize', 7, 'Color', 'r');
+%     end
+%     count=count+1;
+%     meanmx=cell2mat(output(n,5));
+%     minmx=cell2mat(output(n,4));
+%     StDmax=cell2mat(output(n,6));
+%     if count == 3
+%         %errorbar(x,meanmx,(minmx-meanmx),(cell2mat(output((n-2),3))-meanmx),'o')
+%         %error bar with Avmax, minofmax and maxmax --> not good, when bird
+%         %out of view, value very low  --> better Standard Dev.
+%         errorbar(x,meanmx,StDmax, 'o')
+%         count=0;
+%     end
+% end
+% xlim([0 24])
+% ylim([25 45])
+% xlabel('time (h) from 0 to 24')
+% legend('show', 'Location', 'northeastoutside')
+[filepath,name,ext] = fileparts(filename);
 saveas(overview_plot,strcat(myfilepath,'/overview_plot',name),'tiff')

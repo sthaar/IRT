@@ -2,11 +2,9 @@
 %%by Sita ter Haar & Chirs Klink
 %%previous version version 11okt19
 
-%values over 40 excluded
-maxeye = 40
 
-%edit since 15 apr: commented out tiff. not necessary for now
-% semicolons after lines to prevent printing
+
+function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max(maxeye, myfilepath, filename)
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
@@ -60,12 +58,12 @@ maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 maxPFr = zeros(1,HighestFrameNr);%create empty array
 for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
     maxPFr(f) = max(max(frame_array(:,:,f)));%absolute max of frame
-    minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
+    %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
 end  
     
 %maxsorted=sort(maxPFr, 'descend');
 maxThree = []
-outrow=1
+outrow=1;
     
  extremesexcluded=maxPFr(maxPFr<maxeye);
 maxsorted=sort(maxPFr, 'descend');
@@ -80,7 +78,7 @@ maxsorted=sort(maxPFr, 'descend');
     max10perc=extremesexcluded(indMax10perc);
     indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
     
-mfig = figure; % open figure window
+mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
 ishghandle(mfig)
 
 for j = maxsorted(1:3)  
@@ -91,51 +89,51 @@ for j = maxsorted(1:3)
     % create variable maxThree for output, one row per frame (outrow), first column
     % vmax = frame nr, 2nd column j is max value of that frame
    %!!fix (1)
-    maxThree(outrow,1) = vmax(1)%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
-    maxThree(outrow,2) = j
+    maxThree(outrow,1) = vmax(1);%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    maxThree(outrow,2) = j;
    
     subplot(1,3,outrow)
     im=frame_array(:,:,vmax(1));
     %!!fix (1)
-    imagesc(im,[minfa j])% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    imagesc(im,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
     %place marker at max value
     hold on
     
-    maxframe=plot(cmax,rmax,'r*');
-    axis square
-    title({filename(2:end), [' max-' num2str(outrow)]})
+    maxframe=plot(cmax,rmax,'r*', 'MarkerSize', 2);
+    axis square;
+    title({filename(2:end), [' max-' num2str(outrow)]});
     %title({filename, strcat('\ max\-', num2str(outrow))})
-    outrow=outrow+1
+    outrow=outrow+1;
     movegui('west');  
 end
 
     sgtitle([{filename}])
 
-% max(maxPFr) is same as maxfa
-[filepath,name,ext] = fileparts(filenames(k).name)
-saveas(maxframe,strcat(myfilepath,'/maxframes_',name),'tiff')
-
-mmfig = figure; % open figure window
-MinofMax = min(maxPFr); % is minimum of all max values (max expected to correlate with eye). if bird is absent 23 or so in Rec-zebrafinch test-000381-179_09_31_16_737_original
-%AvMax = mean(maxPFr);
-AvMax = mean(extremesexcluded);
-
-
-%plots max and min of max values (latter is probably lowest animal value)
-%and plots the max 10% of values between minofmax and max
-%SO NOT between min and max, because then you include background values
-ishghandle(mmfig)
-    lineplot=plot(maxPFr, '.','DisplayName', 'max')
-    hold on
-   plot(indMax10perc,max10perc, 'g*', 'DisplayName', 'max10p')
-    threeImgs=plot(maxThree(:,1),maxThree(:,2), 'r*', 'MarkerSize', 3, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
+    [filepath,name,ext] = fileparts(filename);
+    saveas(maxframe,strcat(myfilepath,'/maxframe_',name),'tiff') %myfilepath refers to IRT_multiplefiles_automatic
     
-    line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh')
-    line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove')
-    line([1,length(maxPFr)],[AvMax,AvMax],'Color','black','LineStyle','--', 'DisplayName', 'average_max')
-    xlabel('frame number')
-    ylabel('temperature(C)')
-    title({filename(2:end)})
+    mmfig = figure; % open figure window
+    MinofMax = min(maxPFr); % is minimum of all max values (max expected to correlate with eye). if bird is absent 23 or so in Rec-zebrafinch test-000381-179_09_31_16_737_original
+    indMinmx=find(maxPFr==MinofMax)
+    %AvMax = mean(maxPFr);
+    AvMax = mean(extremesexcluded);
+    StDmax=std(extremesexcluded)
+    
+    %plots max and min of max values (latter is probably lowest animal value)
+    %and plots the max 10% of values between minofmax and max
+    %SO NOT between min and max, because then you include background values
+    ishghandle(mmfig)
+    lineplot=plot(maxPFr, '.','DisplayName', 'max');
+    hold on
+    plot(indMax10perc,max10perc, 'g*', 'MarkerSize', 2, 'DisplayName', 'max10p');
+    threeImgs=plot(maxThree(:,1),maxThree(:,2), 'r*', 'MarkerSize', 2, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
+    minofmax=plot(indMinmx, MinofMax, 'b*', 'MarkerSize', 2, 'DisplayName', 'MinofMax');
+    line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh');
+    line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove');
+    line([1,length(maxPFr)],[AvMax,AvMax],'Color','black','LineStyle','--', 'DisplayName', 'average_max');
+    xlabel('frame number');
+    ylabel('temperature(C)');
+    title({filename(2:end)});
     %ylim([minfa maxfa+2])
     ylim([20 45])
     hold off
@@ -147,6 +145,7 @@ ishghandle(mmfig)
 end
 close all
 
+end
 %%
 %manual options below
 
