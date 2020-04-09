@@ -21,7 +21,7 @@
 %edit since 9 apr 20: 
 %-new graph
 %-stand dev
-%
+%-outputtable better
 
 clear
 %values over 40 excluded 
@@ -31,10 +31,18 @@ myfilepath = uigetdir %gets directory
 filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
-headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
-output=cell(1, length(headers))
-output(1,1) = {matlab.desktop.editor.getActiveFilename};
-output(2,:) = headers;
+headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'minfa', 'm', 'timestamp', 'date', 'scriptname'}
+vartypes={'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double','datetime', 'string'}
+%output=cell(1, length(headers))
+output=table;
+sz=[length(filenames)*3,length(headers)];
+output=table('Size',sz, 'VariableTypes', vartypes, 'VariableNames',headers);
+%temp = output(column1, column2, 'VariableNames',{'c1','c2'});
+
+
+%output(1,:) = headers;
+output.scriptname = {matlab.desktop.editor.getActiveFilename};
+addrow=1; %in order to add three rows each filename. 
 for k = 1:length(filenames)
     %filename=strcat('\',filenames(k).name)
     filename=strcat('/',filenames(k).name)
@@ -42,25 +50,45 @@ for k = 1:length(filenames)
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
     [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic(maxeye, myfilepath, filename);   
-   % if HighestFrameNr > 1
-        filedate=datefromFilename(filename)
+   % if HighestFrameNr > 1      
+        filedate=datefromFilename(filename);
         %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
-        timeindend=max(strfind(filename, '_'))
-        timeindst=timeindend-8
+        timeindend=max(strfind(filename, '_'));
+        timeindst=timeindend-8;
         %timestampstr=replace(filename(timeindst:timeindend-1), '_', ':')
-        timestampstr=erase(filename(timeindst:timeindend-1), '_')
-        %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')
-        for m = 1:3
-          appendline = {filename, maxThree(m,1), maxThree(m,2), MinofMax, AvMax, StDmax, minfa, 0, m, timestampstr, filedate};
-            output(end+1,:) = appendline;
+        timestampstr=erase(filename(timeindst:timeindend-1), '_');
+        %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')%H,MI,S)
+        %timestamp=datetime(timestampstr, (H, MI, S))
+       for m = 1:3;
+          %appendline = (filename, maxThree(m,1), maxThree(m,2), MinofMax, AvMax, StDmax, minfa, 0, m, timestampstr, filedate);
+          %output(end+1,:) = appendline;
+          r=addrow;%in order to add three rows each filename. 
+          headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'minfa', 'm', 'timestampstr', 'date', 'scriptname'};
+          output.filename(r) = filename;
+          output.frameNumber(r) = maxThree(m,1);
+          output.max(r)= maxThree(m,2);
+          output.minOfMax(r)=MinofMax;
+          output.AvMax(r)=AvMax;
+          output.StDmax(r)=StDmax;
+          output.minfa(r)=minfa;
+          output.m(r)=m;
+          output.timestamp(r)=str2num(timestampstr);
+          output.date(r)=date;
+          addrow=addrow+1;
         end
     %end
 end
-T = cell2table(output);
-writetable(T,strcat(myfilepath, '/output.csv'))
+%T = cell2table(output);
+[filepath,name,ext] = fileparts(filename);
+sep=strfind(myfilepath, filesep)
+foldrname=myfilepath((sep(end)+1):end)
+%foldrname=strsplit(myfilepath, filesep)%last in array
+writetable(output,strcat(myfilepath, filesep, foldrname,'_output.csv'))
+%writetable(output,strcat(myfilepath, '/', name,'output.csv'))
 
 %color=[0 0 0]
-uniquedates = unique(output(3:length(output),11));
+%uniquedates = unique(output(3:length(output),11));
+uniquedates = unique(output.date);
 nfig = figure; % open figure window
 ishghandle(nfig)
 hold on

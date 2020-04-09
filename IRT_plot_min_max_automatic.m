@@ -62,7 +62,7 @@ for f=1:HighestFrameNr % for each frame, extract the max value and place in arra
 end  
     
 %maxsorted=sort(maxPFr, 'descend');
-maxThree = []
+maxThree = [];
 outrow=1;
     
  extremesexcluded=maxPFr(maxPFr<maxeye);
@@ -101,7 +101,7 @@ for j = maxsorted(1:3)
     
     maxframe=plot(cmax,rmax,'r*', 'MarkerSize', 2);
     axis square;
-    title({filename(2:end), [' max-' num2str(outrow)]});
+    title({filename(2:end), [' max-' num2str(outrow), ', frame= ' num2str(maxThree(outrow,1)), ', max value= ' num2str(maxThree(outrow,2))]});
     %title({filename, strcat('\ max\-', num2str(outrow))})
     outrow=outrow+1;
     movegui('west');  
@@ -114,10 +114,10 @@ end
     
     mmfig = figure; % open figure window
     MinofMax = min(maxPFr); % is minimum of all max values (max expected to correlate with eye). if bird is absent 23 or so in Rec-zebrafinch test-000381-179_09_31_16_737_original
-    indMinmx=find(maxPFr==MinofMax)
+    indMinmx=find(maxPFr==MinofMax);
     %AvMax = mean(maxPFr);
     AvMax = mean(extremesexcluded);
-    StDmax=std(extremesexcluded)
+    StDmax=std(extremesexcluded);
     
     %plots max and min of max values (latter is probably lowest animal value)
     %and plots the max 10% of values between minofmax and max
