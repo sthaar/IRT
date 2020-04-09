@@ -32,7 +32,7 @@ filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
 headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'minfa', 'm', 'timestamp', 'date', 'scriptname'}
-vartypes={'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double','datetime', 'string'}
+vartypes={'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double','string', 'string'}
 %output=cell(1, length(headers))
 output=table;
 sz=[length(filenames)*3,length(headers)];
@@ -73,7 +73,7 @@ for k = 1:length(filenames)
           output.minfa(r)=minfa;
           output.m(r)=m;
           output.timestamp(r)=str2num(timestampstr);
-          output.date(r)=date;
+          output.date(r)=filedate;
           addrow=addrow+1;
         end
     %end
@@ -148,7 +148,7 @@ for m =1:length(uniquedates)
     StD=output.StDmax(rows(1):rows(end));
     x=(output.timestamp(rows(1):rows(end)))/10000;
     %headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDma   x', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
-    errorbar(x,means,StD, '-s')
+    overview_plot=errorbar(x,means,StD, '-s')
     %legend(uniquedates(m))
     hold on
 %end
