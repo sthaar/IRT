@@ -4,7 +4,7 @@
 
 
 
-function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max(maxeye, myfilepath, filename)
+function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max_automatic(maxeye, myfilepath, filename)
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
@@ -12,26 +12,39 @@ Z=load([myfilepath filename]); % load the data
 
 %% find how many frames exist in this data-file
 HighestFrameFound = false; % switch for loop below
+FirstFrameFound = false
 framenr=1; % start looking at frame nr 1 and find the highest frame nr
 fprintf('Highest framenr: ');
 while ~HighestFrameFound
     fn=['Frame' num2str(framenr)]; % create a 'FrameX' label
+    %fprintf(['fn ' fn '...\n'])
+    framenr=framenr+1; % if so check next number
     if isfield(Z,fn) % does it exist in Z?
-        framenr=framenr+1; % if so check next number
+        if FirstFrameFound == false
+            FirstFrameNr = framenr
+            FirstFrameFound = true;
+        end
     else
-        HighestFrameFound = true; % previous number was the last exist
-        HighestFrameNr=framenr-1; % so subtract one
-        fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
+        if FirstFrameFound == true
+            HighestFrameFound = true; % previous number was the last exist
+            HighestFrameNr=framenr-2; % so subtract one
+            fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
+        end
     end
 end
 
 %% collecting frames in a single array
 if HighestFrameNr >1
-    frame_array = zeros(size(Z.Frame1,1),...
-    size(Z.Frame1,2),framenr-1); % pre-allocate a 3d array
-    for f=1:HighestFrameNr
+    fr=['Frame' num2str(HighestFrameNr)]
+    frame_array = zeros(size(Z.(fr),1),...
+    size(Z.(fr),2),framenr-1); % pre-allocate a 3d array
+    for f=FirstFrameNr:HighestFrameNr
         frame_array(:,:,f) = eval(['Z.Frame' num2str(f)]); % put frames in
     end
+
+%% get min and max value of whole frame
+minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
+maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 
 %% animate in implay (needs to be in 0-255 range)%outcommented in version 23okt18
 % fa=frame_array; % duplicate array (think about memory: don't do this if you don't need it)
@@ -40,8 +53,7 @@ if HighestFrameNr >1
 % fan = uint8(((fa-minfa)./(maxfa-minfa))*255); % normalize to 8-bit range
 
 %% animate in figure window (in temp scale)
-minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
-maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
+
 %%animation
 %mfig = figure; % open figure window
 %set(mfig,'Position',[0 0 640 512]); % with predefined size and position
@@ -53,18 +65,27 @@ maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 %        title(['FrameNr: ' num2str(i)]); % title with frame nr
 %    i=i+1; % nest frame
 %end
-
+%% very extreme values like hot lamp (everythong above 45degree C) replaced with NaN by a block
+if maxfa > 45
+    frame_array=checkframe_excludeparts_automatic(frame_array);
+end
 %% calculate max value of each frame and determine min and max of that (i.e. range of max values)
 maxPFr = zeros(1,HighestFrameNr);%create empty array
 for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
-    maxPFr(f) = max(max(frame_array(:,:,f)));%absolute max of frame
+    mx = max(max(frame_array(:,:,f)));%absolute max of frame;
+    maxPFr(f) = mx(1);
     %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
 end  
-    
+
+
+
+
+%% extreme values above 'max eye' replaced by NaN per individual pixel
+
 %maxsorted=sort(maxPFr, 'descend');
 maxThree = [];
 outrow=1;
-    
+
  extremesexcluded=maxPFr(maxPFr<maxeye);
 maxsorted=sort(maxPFr, 'descend');
 
@@ -95,7 +116,7 @@ for j = maxsorted(1:3)
     subplot(1,3,outrow)
     im=frame_array(:,:,vmax(1));
     %!!fix (1)
-    imagesc(im,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    imagesc(im,[minfa maxfa]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
     %place marker at max value
     hold on
     

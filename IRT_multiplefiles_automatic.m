@@ -28,7 +28,7 @@ clear
 maxeye = 40
 
 myfilepath = uigetdir %gets directory
-filenames = dir(fullfile(myfilepath,'*.mat')); %gets all mat files in struct
+filenames = dir(fullfile(myfilepath,filesep,'*.mat')); %gets all mat files in struct
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
 headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'minfa', 'm', 'timestamp', 'date', 'scriptname'}
@@ -51,11 +51,11 @@ for k = 1:length(filenames)
     %frames are plotted (still have to split this into a seperate graph
     [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic(maxeye, myfilepath, filename);   
    % if HighestFrameNr > 1      
-        filedate=datefromFilename(filename);
-        %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
+        try filedate=datefromfileinfo(filename);
+        catch filedate=datefromFilename(filename);
+        end        %matrix kan niet character dus dit werkt niet: output = [filename maxfa vmax rmax cmax]
         timeindend=max(strfind(filename, '_'));
         timeindst=timeindend-8;
-        %timestampstr=replace(filename(timeindst:timeindend-1), '_', ':')
         timestampstr=erase(filename(timeindst:timeindend-1), '_');
         %timestamp=datetime(timestampstr, 'InputFormat', 'HH:mm:ss')%H,MI,S)
         %timestamp=datetime(timestampstr, (H, MI, S))
@@ -72,7 +72,10 @@ for k = 1:length(filenames)
           output.StDmax(r)=StDmax;
           output.minfa(r)=minfa;
           output.m(r)=m;
-          output.timestamp(r)=str2num(timestampstr);
+          try
+              output.timestamp(r)=str2num(timestampstr);
+          catch output.timestamp(r) =0
+          end
           output.date(r)=filedate;
           addrow=addrow+1;
         end

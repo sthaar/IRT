@@ -1,10 +1,10 @@
 function [fdate] = datefromFilename(filen)
     Num = regexp(filen,'\d\d...\d\d');%two numbers in a row
-    years=(17:19);
+    Y=(17:20);
     fdate=0;
-    if any(years == str2num(filen((Num+5):(Num+6))));
+    try any(Y == str2num(filen((Num+5):(Num+6))));
         fdate = filen(Num:(Num+6));
-    else
+    catch
         fdate = 'no date found';
     end
 %     for i = 1:(length(Num)-6)
