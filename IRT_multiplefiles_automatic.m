@@ -28,7 +28,7 @@ clear
 maxeye = 40
 
 myfilepath = uigetdir %gets directory
-filenames = dir(fullfile(myfilepath,filesep,'*.mat')); %gets all mat files in struct
+filenames = dir(fullfile(myfilepath,filesep,'**','*.mat')); %gets all mat files in struct
 %output = {};
 %achteraf gezien waarschijnlijk beter struct dan cell
 headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDmax', 'minfa', 'm', 'timestamp', 'date', 'scriptname'}
@@ -49,7 +49,7 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic(maxeye, myfilepath, filename);   
+    [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames);   
    % if HighestFrameNr > 1      
         try filedate=datefromfileinfo(filename);
         catch filedate=datefromFilename(filename);

@@ -4,52 +4,88 @@
 
 
 
-function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max_automatic(maxeye, myfilepath, filename, filenames)
+function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames)
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
-%Z=load([myfilepath filename]); % load the data
+
 for x=1:length(filenames)
     if strcmp(['/', filenames(x).name],filename)
         folder=filenames(x).folder
     end
 end
-Z=load([folder filename]); % load the data
+
+Z=load([myfilepath filesep filename]); % load the data
+
+%if isa(Z, 'double')
+%    HighestFrameNr=size(frame_array,3); %3rd dimension = nr of frames
+%n=str([filename, -.mat])
+%Z.(n{1})
+%elseif isa(Z, 'struct')
 %% find how many frames exist in this data-file
-HighestFrameFound = false; % switch for loop below
-FirstFrameFound = false
-framenr=1; % start looking at frame nr 1 and find the highest frame nr
-fprintf('Highest framenr: ');
-fld=fieldnames(Z);
-while ~HighestFrameFound
-    fn=['Frame' num2str(framenr)]; % create a 'FrameX' label
-    %fprintf(['fn ' fn '...\n'])
-    framenr=framenr+1; % if so check next number
-    if isfield(Z,fn) % does it exist in Z?
-        if FirstFrameFound == false;
-            FirstFrameNr = framenr;
-            FirstFrameFound = true;
-        end
-    else
-        if FirstFrameFound == true
-            HighestFrameFound = true; % previous number was the last exist
-            HighestFrameNr=framenr-2; % so subtract one
-            fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
-        else
-           HighestFrameFound = size(Z.fld{1},3); % previous number was the last exist
+%sometimes file is already array, sometimes file doesnt start with frame 1
+% FirstFrameFound = false;
+% HighestFrameFound = false; % switch for loop below
+% fZ=fieldnames(Z);
+% count=0
+% framenr=0; % start looking at frame nr 1 and find the highest frame nr
+% 
+% for fields=1:numel(fZ)
+%     while ~HighestFrameFound && count<=numel(fZ) 
+%         %&& strcmp()
+%         fn=['Frame' num2str(count)]; % create a 'FrameX' label
+% %        fprintf(['fields' num2str(count) '\n']);
+%         %fprintf(['fn ' fn '(...\n'])
+%         if isfield(Z,fn) % does it exist in Z?
+%             if FirstFrameFound == false % for first frame start counting
+%                 FirstFrameNr = count
+%                 FirstFrameFound = true;
+%                 framenr=framenr+1; % if so check next number
+%             elseif FirstFrameFound == true %continue counting
+%                 framenr=framenr+1;
+%             end
+%         else 
+%             if FirstFrameFound == true %frame doesnt exist, but first does, so end of file
+%                 HighestFrameFound = true; % previous number was the last exist
+%                 HighestFrameNr=count-1; % so subtract one
+%                 fprintf('Highest framenr: ');
+%                 fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
+%                 %n=strsplit(filename, '.')
+%                 %frame_array=Z.(n{1})
+%                 %HighestFrameNr=size(frame_array,3); %3rd dimension = nr of frames
+%             end
+%         end
+%         count=count+1
+%     end
+% end
 
-        end
-    end
-end
+%%
+%5dec20 test easier nr of frames
+fZ=fieldnames(Z);
+framenames=fZ(not(contains(fZ, 'DateTime')))
+HighestFrameName=framenames(length(framenames)) % get name of last frame in framenames (not necessarily same as length framenames, if starts with 0 or >1
+HighestFrameNr = cell2mat(regexp(HighestFrameName{1}, '\d+', 'match'))
 
+%fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
+%else
+%    fprintf('Wrong input. should be struct or double')
+%end
 %% collecting frames in a single array
 if HighestFrameNr >1
-    fr=['Frame' num2str(HighestFrameNr)]
-    frame_array = zeros(size(Z.(fr),1),...
-    size(Z.(fr),2),framenr-1); % pre-allocate a 3d array
-    for f=FirstFrameNr:HighestFrameNr
-        frame_array(:,:,f) = eval(['Z.Frame' num2str(f)]); % put frames in
+    fr=['Frame' num2str(HighestFrameNr)]%to determine size of array
+    if isfield(Z,fr)
+        frame_array = zeros(size(Z.(fr)));
+        %size(Z.(fr),2),framenr-1); % pre-allocate a 3d array why -1??
+       % if FirstFrameNr==0 % 0 can't be index in matlab
+        %    FirstFrameNr=FirstFrameNr+1
+         %   HighestFrameNr=HighestFrameNr+1
+        %end
+        for f=1:length(framenames)
+                frame_array(:,:,f) = eval(['Z.' num2str(framenames{1})]); % put frames in array (
+                fprintf([num2str(f) ' '])
+        end
     end
+
 
 %% get min and max value of whole frame
 minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
@@ -75,12 +111,16 @@ maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 %    i=i+1; % nest frame
 %end
 %% very extreme values like hot lamp (everythong above 45degree C) replaced with NaN by a block
+
+%%%3dec20 adjust function to nr of frames counted above
 if maxfa > 45
     frame_array=checkframe_excludeparts_automatic(frame_array);
 end
 %% calculate max value of each frame and determine min and max of that (i.e. range of max values)
-maxPFr = zeros(1,HighestFrameNr);%create empty array
-for f=1:HighestFrameNr % for each frame, extract the max value and place in array maxPFr
+frameArSize=size(frame_array)
+maxPFr = zeros(1,frameArSize(3));%create empty array
+
+for f=1:frameArSize(3) % for each frame, extract the max value and place in array maxPFr
     mx = max(max(frame_array(:,:,f)));%absolute max of frame;
     maxPFr(f) = mx(1);
     %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
@@ -125,7 +165,7 @@ for j = maxsorted(1:3)
     subplot(1,3,outrow)
     im=frame_array(:,:,vmax(1));
     %!!fix (1)
-    imagesc(im,[minfa maxfa]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+    imagesc(im,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
     %place marker at max value
     hold on
     
