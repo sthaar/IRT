@@ -7,12 +7,12 @@ IRT
 %written in MATLAB 2017a Windows 7
 
 
-Run script IRT_multiplefiles17okt19.m make sure that datefromFilename.m en IRT_plot_min_max17okt19.m are in the same folder.
+Run script IRT_multiplefiles17.m (green 'play' button, or make sure that datefromfileinfo.m en IRT_plot_min_max_automatic.m are in the same folder.
+Make sure folder with all scripts is added to path (left sidebar with'current folder' is not greyed out. if it is grey, right click and select 'add to path> selected folder and subfolders')
 
-In line 57 t/m 65 in IRT_multiplefiles17okt19.m maximum values per frame are plotted. 
-(If you want to change font size for example, you can change the value where it now sais 7 to whatever you like)
+In the pop-up select the folders containing IRT video data in .mat format
 
-In line 70 t/73 in IRT_plot_min_max17okt19 an image of the frame with the max value is shown (where you see the animal), with asterix op de max value
+Images of the frame with the max value is shown (where you see the animal), with asterix op de max value to verify that the max lavue is on the eye. It automatically proceeds to the next video
 
-If there is a part you want to exclude, type a % before the line. That part will turn green and will be excluded. Sometimes this results in errors, if a variable is created that is needed elsewhere for example.
+It may take a while before it is done!
 
