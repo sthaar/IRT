@@ -24,8 +24,8 @@
 %-outputtable better
 
 clear
-%values over 40 excluded 
-maxeye = 40
+%values over 43 excluded 
+maxeye = 43
 
 myfilepath = uigetdir %gets directory
 filenames = dir(fullfile(myfilepath,filesep,'**','*.mat')); %gets all mat files in struct
@@ -91,9 +91,9 @@ writetable(output,strcat(myfilepath, filesep, foldrname,'_output.csv'))
 
 %color=[0 0 0]
 %uniquedates = unique(output(3:length(output),11));
-uniquedates = unique(output.date);
-nfig = figure; % open figure window
-ishghandle(nfig)
+
+
+%%
 %hold on
 %plot timestamp (x), by max values (y)
 % count=0
@@ -139,6 +139,12 @@ ishghandle(nfig)
 % xlabel('time (h) from 0 to 24')
 % legend('show', 'Location', 'northeastoutside')
 
+%%
+uniquedates = unique(output.date);
+nfig = figure; % open figure window
+ishghandle(nfig)
+hold on
+
 uniquedates=unique(output.date)
 %f3=figure
 
@@ -147,20 +153,25 @@ for m =1:length(uniquedates)
     rows=find(output.date==uniquedates(m));
     %StDmax=cell2mat(output(3:end,6));
     %meanmx=cell2mat(output(3:end,5));
-    means=output.AvMax(rows(1):rows(end));
-    StD=output.StDmax(rows(1):rows(end));
-    x=(output.timestamp(rows(1):rows(end)))/10000;
-    %headers = {'filename', 'frameNumber', 'max', 'minOfMax', 'AvMax', 'StDma   x', 'vmin', 'bestImage', 'm', 'timestamp', 'date'}
-    overview_plot=errorbar(x,means,StD, '-s')
-    %legend(uniquedates(m))
-    hold on
+    %means=output.AvMax(rows(1):rows(end));
+    %maxmax(rows)=output.max(rows(1):rows(end))
+    maxmax(m,rows)=output.max(rows)
+    StD(m,rows)=output.StDmax(rows);
+    x(m,rows)=(output.timestamp(rows))/10000;
 %end
 %hold off
 
 
 end
-xlim([0 24]);
-ylim([25 45]);
+
+maxmax(maxmax==0) = NaN
+for m =1:length(uniquedates)
+    overview_plot=errorbar(x(m,:),maxmax(m,:),StD(m,:), '-s', 'MarkerSize',3)
+    hold on
+end
+
+xlim([-5 24]);
+ylim([30 45]);
 xlabel('time (h) from 0 to 24');
 
 legend(uniquedates)
@@ -169,5 +180,7 @@ hold off
 
 
 
-[filepath,name,ext] = fileparts(filename);
-saveas(overview_plot,strcat(myfilepath,'/overview_plot',name),'tiff')
+%[filepath,name,ext] = fileparts(filename);
+%saveas(overview_plot,strcat(myfilepath,'/overview_plot',name),'tiff')
+nameplot=strcat(myfilepath,'/',foldrname, '_overview_plot.epsc')
+saveas(gcf,nameplot)

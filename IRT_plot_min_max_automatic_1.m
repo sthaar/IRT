@@ -1,6 +1,6 @@
 %%script for loading,viewing, calculating data from FLIR Infrared thermography camera (IRT FLIR 430c ) 
-%%by Sita ter Haar & Chirs Klink
-%%previous version version 11okt19
+%%by Sita ter Haar
+%%previous version version 12dec19
 
 
 
@@ -11,7 +11,7 @@ fprintf(['Loading data ' filename '...\n']);
 
 for x=1:length(filenames)
     if strcmp(['/', filenames(x).name],filename)
-        folder=filenames(x).folder
+        folder=filenames(x).folder;
     end
 end
 
@@ -60,11 +60,17 @@ Z=load([myfilepath filesep filename]); % load the data
 % end
 
 %%
-%5dec20 test easier nr of frames
+%5dec20 test easier nr of frames. 
+%2aug21edit so that new frame arrays without
+%labels can also be read
 fZ=fieldnames(Z);
-framenames=fZ(not(contains(fZ, 'DateTime')))
-HighestFrameName=framenames(length(framenames)) % get name of last frame in framenames (not necessarily same as length framenames, if starts with 0 or >1
-HighestFrameNr = cell2mat(regexp(HighestFrameName{1}, '\d+', 'match'))
+framenames=fZ((contains(fZ, 'Frame')) & (not(contains(fZ, 'DateTime'))));
+if isempty(framenames)
+    HighestFrameNr=length(Z.frame_array);
+else
+HighestFrameName=framenames(length(framenames)); % get name of last frame in framenames (not necessarily same as length framenames, if starts with 0 or >1
+HighestFrameNr = cell2mat(regexp(HighestFrameName{1}, '\d+', 'match'));
+end
 
 %fprintf([num2str(HighestFrameNr) '\n']); % and print to cmd
 %else
@@ -72,21 +78,24 @@ HighestFrameNr = cell2mat(regexp(HighestFrameName{1}, '\d+', 'match'))
 %end
 %% collecting frames in a single array
 if HighestFrameNr >1
-    fr=['Frame' num2str(HighestFrameNr)]%to determine size of array
-    if isfield(Z,fr)
-        frame_array = zeros(size(Z.(fr)));
-        %size(Z.(fr),2),framenr-1); % pre-allocate a 3d array why -1??
-       % if FirstFrameNr==0 % 0 can't be index in matlab
-        %    FirstFrameNr=FirstFrameNr+1
-         %   HighestFrameNr=HighestFrameNr+1
-        %end
-        for f=1:length(framenames)
-                frame_array(:,:,f) = eval(['Z.' num2str(framenames{1})]); % put frames in array (
-                fprintf([num2str(f) ' '])
+    if isempty(framenames)==0
+        fr=['Frame' num2str(HighestFrameNr)];%to determine size of array;
+        if isfield(Z,fr)
+            frame_array = zeros(size(Z.(fr)));
+            %size(Z.(fr),2),framenr-1); % pre-allocate a 3d array why -1??
+           % if FirstFrameNr==0 % 0 can't be index in matlab
+            %    FirstFrameNr=FirstFrameNr+1
+             %   HighestFrameNr=HighestFrameNr+1
+            %end
+            for f=1:length(framenames)
+                    frame_array(:,:,f) = eval(['Z.' num2str(framenames{f})]); % put frames in array (
+                    %fprintf([num2str(f) ' '])
+            end
         end
+    else
+        frame_array=Z.frame_array;
     end
-
-
+end
 %% get min and max value of whole frame
 minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
 maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
@@ -113,16 +122,16 @@ maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 %% very extreme values like hot lamp (everythong above 45degree C) replaced with NaN by a block
 
 %%%3dec20 adjust function to nr of frames counted above
-if maxfa > 45
+if maxfa > 48
     frame_array=checkframe_excludeparts_automatic(frame_array);
 end
 %% calculate max value of each frame and determine min and max of that (i.e. range of max values)
-frameArSize=size(frame_array)
+frameArSize=size(frame_array);
 maxPFr = zeros(1,frameArSize(3));%create empty array
 
 for f=1:frameArSize(3) % for each frame, extract the max value and place in array maxPFr
     mx = max(max(frame_array(:,:,f)));%absolute max of frame;
-    maxPFr(f) = mx(1);
+    maxPFr(f) = mx(1); %(1) in case multiple max values
     %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
 end  
 
@@ -212,7 +221,7 @@ end
     saveas(lineplot,strcat(myfilepath,'/lineplot_max_',name),'tiff')
 
 
-end
+%end
 close all
 
 end
