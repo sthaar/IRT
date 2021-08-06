@@ -26,6 +26,7 @@
 clear
 %values over 43 excluded 
 maxeye = 43
+auto_semi = input('automatic? type a or semiautomatic? type s', 's')
 
 myfilepath = uigetdir %gets directory
 filenames = dir(fullfile(myfilepath,filesep,'**','*.mat')); %gets all mat files in struct
@@ -49,7 +50,7 @@ for k = 1:length(filenames)
     %script 'IRT_play_min_max14okt19' gets frames with max three values and
     %plots it. In first plot also lines for min and max values over alle
     %frames are plotted (still have to split this into a seperate graph
-    [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames);   
+    [maxThree, MinofMax, minfa, AvMax, StDmax]=IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames, auto_semi);   
    % if HighestFrameNr > 1      
         try filedate=datefromfileinfo(filename);
         catch filedate=datefromFilename(filename);

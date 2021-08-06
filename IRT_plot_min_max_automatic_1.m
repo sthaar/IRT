@@ -100,70 +100,70 @@ end
 usr = 'r';
 rerun = 0;
 while usr == 'r'
-%% get min and max value of whole frame
-minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
-maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
+    %% get min and max value of whole frame
+    minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
+    maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
 
-%% animate in implay (needs to be in 0-255 range)%outcommented in version 23okt18
-% fa=frame_array; % duplicate array (think about memory: don't do this if you don't need it)
-% minfa=min(min(min(fa,[],1),[],2),[],3); % get minimal temp value
-% maxfa=max(max(max(fa,[],1),[],2),[],3); % get maximal temp value
-% fan = uint8(((fa-minfa)./(maxfa-minfa))*255); % normalize to 8-bit range
+    %% animate in implay (needs to be in 0-255 range)%outcommented in version 23okt18
+    % fa=frame_array; % duplicate array (think about memory: don't do this if you don't need it)
+    % minfa=min(min(min(fa,[],1),[],2),[],3); % get minimal temp value
+    % maxfa=max(max(max(fa,[],1),[],2),[],3); % get maximal temp value
+    % fan = uint8(((fa-minfa)./(maxfa-minfa))*255); % normalize to 8-bit range
 
-%% animate in figure window (in temp scale)
+    %% animate in figure window (in temp scale)
 
-%%animation
-%mfig = figure; % open figure window
-%set(mfig,'Position',[0 0 640 512]); % with predefined size and position
-%i=1; % framenr to cycle through
-%while ishghandle(mfig) && i<=HighestFrameNr %check if fig window and frame exist
-%    pause(0.02) % pause after every frame (determines play-rate
-%        imagesc(frame_array(:,:,i),[minfa maxfa]); % draw
-%        c=colorbar;title(c,'Temp (C)'); % temp scale bar
-%        title(['FrameNr: ' num2str(i)]); % title with frame nr
-%    i=i+1; % nest frame
-%end
-%% very extreme values like hot lamp (everythong above 45degree C) replaced with NaN by a block
+    %%animation
+    %mfig = figure; % open figure window
+    %set(mfig,'Position',[0 0 640 512]); % with predefined size and position
+    %i=1; % framenr to cycle through
+    %while ishghandle(mfig) && i<=HighestFrameNr %check if fig window and frame exist
+    %    pause(0.02) % pause after every frame (determines play-rate
+    %        imagesc(frame_array(:,:,i),[minfa maxfa]); % draw
+    %        c=colorbar;title(c,'Temp (C)'); % temp scale bar
+    %        title(['FrameNr: ' num2str(i)]); % title with frame nr
+    %    i=i+1; % nest frame
+    %end
+    %% very extreme values like hot lamp (everythong above 45degree C) replaced with NaN by a block
 
-%%%3dec20 adjust function to nr of frames counted above
-if maxfa > 48
-    frame_array=checkframe_excludeparts_automatic(frame_array);
-end
-%% calculate max value of each frame and determine min and max of that (i.e. range of max values)
-frameArSize=size(frame_array);
-maxPFr = zeros(1,frameArSize(3));%create empty array
+    %%%3dec20 adjust function to nr of frames counted above
+    if maxfa > 48
+        frame_array=checkframe_excludeparts_automatic(frame_array);
+    end
+    %% calculate max value of each frame and determine min and max of that (i.e. range of max values)
+    frameArSize=size(frame_array);
+    maxPFr = zeros(1,frameArSize(3));%create empty array
 
-for f=1:frameArSize(3) % for each frame, extract the max value and place in array maxPFr
-    mx = max(max(frame_array(:,:,f)));%absolute max of frame;
-    maxPFr(f) = mx(1); %(1) in case multiple max values
-    %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
-end  
-
-
+    for f=1:frameArSize(3) % for each frame, extract the max value and place in array maxPFr
+        mx = max(max(frame_array(:,:,f)));%absolute max of frame;
+        maxPFr(f) = mx(1); %(1) in case multiple max values
+        %minOfMaxPFr(f) = min(max(frame_array(:,:,f))); % minimum of max of each column per frame
+    end      
 
 
-%% extreme values above 'max eye' replaced by NaN per individual pixel
 
-%maxsorted=sort(maxPFr, 'descend');
-maxThree = [];
-outrow=1;
 
- extremesexcluded=maxPFr(maxPFr<maxeye);
-maxsorted=sort(maxPFr, 'descend');
+    %% extreme values above 'max eye' replaced by NaN per individual pixel
 
- threshold=maxsorted(int16(length(maxsorted))*0.1); %threshold max 10%    
-    %changed maxPFr to extremesexcluded
-    %23jan20:
-    %indMax10perc=find(maxPFr>threshold); 
-    %max10perc=maxPFr(indMax10perc);
-    
-    indMax10perc=find(extremesexcluded>threshold);
-    max10perc=extremesexcluded(indMax10perc);
-    indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
-    
-mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
-ishghandle(mfig)
-maxloop=maxsorted(~isnan(maxsorted));%select max nrs that are not 
+    %maxsorted=sort(maxPFr, 'descend');
+    maxThree = [];
+    outrow=1;
+
+     extremesexcluded=maxPFr(maxPFr<maxeye);
+    maxsorted=sort(maxPFr, 'descend');
+
+     threshold=maxsorted(int16(length(maxsorted))*0.1); %threshold max 10%    
+        %changed maxPFr to extremesexcluded
+        %23jan20:
+        %indMax10perc=find(maxPFr>threshold); 
+        %max10perc=maxPFr(indMax10perc);
+
+        indMax10perc=find(extremesexcluded>threshold);
+        max10perc=extremesexcluded(indMax10perc);
+        indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
+
+        mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
+        ishghandle(mfig)
+        maxloop=maxsorted(~isnan(maxsorted));%select max nrs that are not 
     for j = maxloop(1:3);
         % find which frame (index) has min and which frames have the 3 highest values (top
         % 3) v in vmin and vmax means frame number 
@@ -243,6 +243,7 @@ maxloop=maxsorted(~isnan(maxsorted));%select max nrs that are not
             usr = input('next? y or redo? r', 's');
         end
     else
+        usr = 'y'
         continue
     end
     %end
