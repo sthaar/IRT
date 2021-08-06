@@ -4,7 +4,7 @@
 
 
 
-function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames)
+function [maxThree, MinofMax, minfa, AvMax, StDmax] = IRT_plot_min_max_automatic_1(maxeye, myfilepath, filename, filenames, auto_semi)
 %% Load the data
 %[filename, filepath] = uigetfile('.mat'); % select datafile
 fprintf(['Loading data ' filename '...\n']);
@@ -96,6 +96,10 @@ if HighestFrameNr >1
         frame_array=Z.frame_array;
     end
 end
+
+usr = 'r';
+rerun = 0;
+while usr == 'r'
 %% get min and max value of whole frame
 minfa=min(min(min(frame_array,[],1),[],2),[],3); % get minimal temp value
 maxfa=max(max(max(frame_array,[],1),[],2),[],3); % get maximal temp value
@@ -159,32 +163,32 @@ maxsorted=sort(maxPFr, 'descend');
     
 mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
 ishghandle(mfig)
+maxloop=maxsorted(~isnan(maxsorted));%select max nrs that are not 
+    for j = maxloop(1:3);
+        % find which frame (index) has min and which frames have the 3 highest values (top
+        % 3) v in vmin and vmax means frame number 
+        [rmin,cmin,vmin] = ind2sub(size(frame_array),find(frame_array == minfa));
+        [rmax,cmax,vmax] = ind2sub(size(frame_array),find(frame_array == j));
+        % create variable maxThree for output, one row per frame (outrow), first column
+        % vmax = frame nr, 2nd column j is max value of that frame
+       %!!fix (1)
+        maxThree(outrow,1) = vmax(1);%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+        maxThree(outrow,2) = j;
 
-for j = maxsorted(1:3)  
-    % find which frame has min and which frames have the 3 highest values (top
-    % 3) v in vmin and vmax means frame number 
-    [rmin,cmin,vmin] = ind2sub(size(frame_array),find(frame_array == minfa));
-    [rmax,cmax,vmax] = ind2sub(size(frame_array),find(frame_array == j));
-    % create variable maxThree for output, one row per frame (outrow), first column
-    % vmax = frame nr, 2nd column j is max value of that frame
-   %!!fix (1)
-    maxThree(outrow,1) = vmax(1);%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
-    maxThree(outrow,2) = j;
-   
-    subplot(1,3,outrow)
-    im=frame_array(:,:,vmax(1));
-    %!!fix (1)
-    imagesc(im,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
-    %place marker at max value
-    hold on
-    
-    maxframe=plot(cmax,rmax,'r*', 'MarkerSize', 2);
-    axis square;
-    title({filename(2:end), [' max-' num2str(outrow), ', frame= ' num2str(maxThree(outrow,1)), ', max value= ' num2str(maxThree(outrow,2))]});
-    %title({filename, strcat('\ max\-', num2str(outrow))})
-    outrow=outrow+1;
-    movegui('west');  
-end
+        subplot(1,3,outrow)
+        im=frame_array(:,:,vmax(1));
+        %!!fix (1)
+        imagesc(im,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
+        %place marker at max value
+        hold on
+
+        maxframe=plot(cmax,rmax,'r*', 'MarkerSize', 2);
+        axis square;
+        title({filename(2:end), [' max-' num2str(outrow), ', frame= ' num2str(maxThree(outrow,1)), ', max value= ' num2str(maxThree(outrow,2))]});
+        %title({filename, strcat('\ max\-', num2str(outrow))})
+        outrow=outrow+1;
+        movegui('west');  
+    end
 
     sgtitle([{filename}])
 
@@ -219,10 +223,30 @@ end
     legend('show', 'Location', 'northeastoutside')
  
     saveas(lineplot,strcat(myfilepath,'/lineplot_max_',name),'tiff')
-
-
-%end
-close all
+    %for semiauto
+    if auto_semi == 's'
+        figure(mfig)
+        usr = input('next? y or redo? r', 's');
+        if usr == 'r';
+     %       if j==length(extremesexcluded);
+     %           continue
+      %      else
+            frame_array(:,:,[maxThree(:,1)])=NaN; %exclude values that were just shown and not good enough
+    %        frame_array(maxThree(1,1))
+            rerun =rerun+1;
+            close all
+       %     end
+        elseif usr == 'y';
+            continue
+        else
+            warning('wrong input, only y or r allowed')
+            usr = input('next? y or redo? r', 's');
+        end
+    else
+        continue
+    end
+    %end
+    close all
 
 end
 %%
