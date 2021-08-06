@@ -13,15 +13,8 @@
 %-multiplotfor more detail
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% 8apr20
-%function of plotinminmax
-%range
-%fixed output labels
+% 6aug21
 
-%edit since 9 apr 20: 
-%-new graph
-%-stand dev
-%-outputtable better
 
 clear
 %values over 43 excluded 

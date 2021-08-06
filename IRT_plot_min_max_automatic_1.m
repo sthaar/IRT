@@ -1,6 +1,6 @@
 %%script for loading,viewing, calculating data from FLIR Infrared thermography camera (IRT FLIR 430c ) 
 %%by Sita ter Haar
-%%previous version version 12dec19
+%%6aug21
 
 
 
