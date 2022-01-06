@@ -236,7 +236,7 @@ while usr == 'r'
     hold on
     plot(indMax10perc,max10perc, 'g*', 'MarkerSize', 2, 'DisplayName', 'max10p');
     threeImgs=plot(maxThree(:,1),maxThree(:,2), 'or', 'MarkerSize', 2, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
-    %threeImgsInc=plot(maxThreeIncl(:,1),maxThreeIncl(:,2), 'k*', 'MarkerSize', 5, 'DisplayName', 'threeImgsIncl'); % red dots for the three images plotted before
+    threeImgsInc=plot(maxThreeIncl(:,1),maxThreeIncl(:,2), 'k*', 'MarkerSize', 5, 'DisplayName', 'threeImgsIncl'); % red dots for the three images plotted before
     minofmax=plot(indMinmx, MinofMax, 'b*', 'MarkerSize', 2, 'DisplayName', 'MinofMax');
     line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh');
     line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove');

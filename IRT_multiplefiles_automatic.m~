@@ -18,7 +18,7 @@
 
 clear
 %values over 43 excluded 
-maxeye = 35
+maxeye = 34
 mineye = 27
 auto_semi = input('automatic? type a or semiautomatic? type s', 's')
 

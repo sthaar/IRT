@@ -7,7 +7,7 @@
 %not anymore, now90,95 and 100%
 %added buttons, not working yet
 
-function [maxThree, MinofMax, minfa, AvMax, select] = IRT_plot_min_max(maxeye, myfilepath, filename)
+function [maxThree, MinofMax, minfa, AvMax, select] = IRT_plot_min_max(maxeye, mineye, myfilepath, filename)
 %% set functions for buttons
 %function button_call(varargin)
 %        if figsubpb1.Value == true
@@ -99,7 +99,7 @@ while usr == 'r'
   
     %22jan20
     %extremesexcluded=maxsorted(maxsorted<maxeye);
-    extremesexcluded=maxPFr(maxPFr<maxeye);
+    extremesexcluded=maxPFr(maxPFr<maxeye & maxPFr > mineye);
     if isempty(extremesexcluded)== true
         %delete(mfig)
         frame_array = checkframe_excludeparts(frame_array);    
@@ -108,8 +108,9 @@ while usr == 'r'
             minPFr(f)= min(min(frame_array(:,:,f))); % minimum per frame, so background
          end
       %  maxsorted=sort(maxPFr, 'descend');
-%3april something should be fixed?
-    extremesexcluded=maxPFr(maxPFr<maxeye);
+%3april20 something should be fixed?
+%05jan21 outcommented line below becuase duplicate of line 102
+%    extremesexcluded=maxPFr(maxPFr<maxeye);
     end
     
     maxsorted=sort(maxPFr, 'descend');
@@ -207,6 +208,7 @@ mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure win
     
     line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh')
     line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove')
+    line([1,length(maxPFr)],[mineye,mineye],'Color','red','LineStyle','--', 'DisplayName', 'excludedbelow')
     line([1,length(maxPFr)],[AvMax,AvMax],'Color','black','LineStyle','--', 'DisplayName', 'average_max')
     xlabel('frame number')
     ylabel('temperature(C)')

@@ -1,3 +1,5 @@
+%if file not loaded yet (frame_array does not exist) use script 'loaddataIRT'
+
 %check one frame by it's number
 prompt = 'Which frame do you want to check? ';
 frametocheck = input(prompt);
@@ -17,4 +19,7 @@ imagesc(test,[minPfr maxPfr])
 %maxframe=plot(cmax(1),rmax(1),'r*')
 hold on
 plot(cmax(1),rmax(1),'r*')
+plot(124,67,'b*')
+
+plot(cmax(1),rmax(1))
 
