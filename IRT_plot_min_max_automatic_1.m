@@ -66,7 +66,11 @@ Z=load([myfilepath filesep filename]); % load the data
 fZ=fieldnames(Z);
 framenames=fZ((contains(fZ, 'Frame')) & (not(contains(fZ, 'DateTime'))));
 if isempty(framenames)
-    HighestFrameNr=length(Z.frame_array);
+    if exist ('Z.frame_array', 'var')
+        HighestFrameNr=length(Z.frame_array);
+    else
+        HighestFrameNr=length(Z.(fZ{(1)}))
+    end
 else
 HighestFrameName=framenames(length(framenames)); % get name of last frame in framenames (not necessarily same as length framenames, if starts with 0 or >1
 HighestFrameNr = cell2mat(regexp(HighestFrameName{1}, '\d+', 'match'));
@@ -92,8 +96,10 @@ if HighestFrameNr >1
                     %fprintf([num2str(f) ' '])
             end
         end
-    else
+    elseif exist ('Z.frame_array', 'var')
         frame_array=Z.frame_array;
+    else
+        frame_array=Z.(fZ{(1)}); %shortened files, wit X * Y * Z dimensions
     end
 end
 
@@ -144,19 +150,10 @@ while usr == 'r'
     %maxsorted=sort(maxPFr, 'descend');
     maxThree = [];
     outrow=1;
-    extremesexcluded=maxPFr(maxPFr<maxeye & maxPFr > mineye);
+    
     maxsorted=sort(maxPFr, 'descend');
 
-     threshold=maxsorted(int16(length(maxsorted))*0.1); %threshold max 10%    
-        %changed maxPFr to extremesexcluded
-        %23jan20:
-        %indMax10perc=find(maxPFr>threshold); 
-        %max10perc=maxPFr(indMax10perc);
-
-        indMax10perc=find(extremesexcluded>threshold);
-        max10perc=extremesexcluded(indMax10perc);
- %unused       indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
-
+    
         mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
         ishghandle(mfig)
         maxloop=maxsorted(~isnan(maxsorted));%select max nrs that are not NaN
@@ -190,9 +187,12 @@ while usr == 'r'
     %05jan22: until now, maxthree from whole dataframe. now maxThreeIncl only
     %selection of extremesexcluded
     %unused    [rminI,cminI,vminI] = ind2sub(size(extremesexcluded),find(extremesexcluded == minfa));
+    extremesexcluded=maxPFr(maxPFr<maxeye & maxPFr > mineye)
+    IndExtrExcl=find(maxPFr(maxPFr<maxeye & maxPFr > mineye)) %index binnen maxPfr --> framenrs
     maxsortedI=sort(extremesexcluded, 'descend');
-        maxsorted=sort(maxPFr, 'descend');
+   %%%prits IndmaxsortedI=find(maxsortedI(maxPFr<maxeye & maxPFr > mineye)) %index binnen maxPfr
 
+    
     maxloopI=maxsortedI(~isnan(maxsortedI))%select max nrs that are not NaN
     max(extremesexcluded)    
     maxThreeIncl = []; %see explanation 5jan22, line 176
@@ -200,12 +200,20 @@ while usr == 'r'
     mfig = figure('units','normalized','outerposition',[0 0 1 1]); % open figure window
     ishghandle(mfig)
     for j = maxloopI(1:3);
-        [rmaxI,cmaxI,vmaxI] = ind2sub(size(frame_array),find(frame_array == j))
-        maxThreeIncl(outrow,1) = vmaxI(1)
-        maxThreeIncl(outrow,2) = j; 
+        j=j
+        %[rmaxI,cmaxI,vmaxI] = ind2sub(size(frame_array),find(frame_array
+        %== j)) niet goed want subthresh waardes komen vaker voor dus zijn
+        %niet absolute max. Moet IndExtrExcl gebruiken want dat is waar de
+        %waarde (j) de max is in die frame
+        %%dus niet goed (eruit 6jan22): maxThreeIncl(outrow,1) = vmaxI(1) %frame nr
+        indloop=(find(maxPFr==j))
+        maxThreeIncl(outrow,1) =  indloop(1)  %frame nr
+        maxThreeIncl(outrow,2) = j; %value
         subplot(1,3,outrow)
-        imI=frame_array(:,:,vmaxI(1));
-        %!!fix (1)
+        imI=frame_array(:,:,indloop(1));
+        [rmaxI,cmaxI] = ind2sub(size(frame_array(:,:,indloop(1))),find(frame_array(:,:,indloop(1))==j))
+
+ %%!       %!!fix (1)
         imagesc(imI,[minfa j]);% draw frame with maximum value.%the (1) behind it is in case there are two frames with the same value. I shoudl fix this to store both
         %place marker at max value
         hold on
@@ -222,6 +230,17 @@ while usr == 'r'
         saveas(maxframe,strcat(myfilepath,'/maxframe_inc_',name),'tiff') %myfilepath refers to IRT_multiplefiles_automatic
     end
     mmfig = figure; % open figure window
+    
+    threshold10p=maxsorted(int16(length(maxsorted))*0.1); %threshold max 10%   of all data!! not of extremesexcluded!! 
+    %changed maxPFr to extremesexcluded
+    %23jan20:
+    %indMax10perc=find(maxPFr>threshold); 
+    %max10perc=maxPFr(indMax10perc);
+    %indMax10perc=find(extremesexcluded>threshold);        
+    indMax10perc=find(maxPFr(IndExtrExcl)>threshold10p); %from indexes left when extremesexcluded, select those above 10percent (so between 10p and maxeye)
+    max10perc=maxPFr(indMax10perc);
+    %unused       indthresh=find(extremesexcluded==threshold); %index of threshold in maxsorted
+
     MinofMax = min(maxPFr); % is minimum of all max values (max expected to correlate with eye). if bird is absent 23 or so in Rec-zebrafinch test-000381-179_09_31_16_737_original
     indMinmx=find(maxPFr==MinofMax);
     %AvMax = mean(maxPFr);
@@ -235,10 +254,11 @@ while usr == 'r'
     lineplot=plot(maxPFr, '.','DisplayName', 'max');
     hold on
     plot(indMax10perc,max10perc, 'g*', 'MarkerSize', 2, 'DisplayName', 'max10p');
-    threeImgs=plot(maxThree(:,1),maxThree(:,2), 'or', 'MarkerSize', 2, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
+    threeImgs=plot(maxThree(:,1),maxThree(:,2), '*r', 'MarkerSize', 2, 'DisplayName', 'threeImgs'); % red dots for the three images plotted before
+    threeImgsIncl=plot(maxThreeIncl(:,1),maxThreeIncl(:,2), 'or', 'MarkerSize', 5, 'DisplayName', 'threeImgsIncl'); % red dots for the three images plotted before    
     %threeImgsInc=plot(maxThreeIncl(:,1),maxThreeIncl(:,2), 'k*', 'MarkerSize', 5, 'DisplayName', 'threeImgsIncl'); % red dots for the three images plotted before
     minofmax=plot(indMinmx, MinofMax, 'b*', 'MarkerSize', 2, 'DisplayName', 'MinofMax');
-    line([1,length(maxPFr)],[threshold,threshold],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh');
+    line([1,length(maxPFr)],[threshold10p,threshold10p],'Color','yellow','LineStyle','--', 'DisplayName', 'max10pthresh');
     line([1,length(maxPFr)],[maxeye,maxeye],'Color','red','LineStyle','--', 'DisplayName', 'excludedabove');
     line([1,length(maxPFr)],[mineye,mineye],'Color','red','LineStyle','--', 'DisplayName', 'excludedbelow');
     line([1,length(maxPFr)],[AvMax,AvMax],'Color','black','LineStyle','--', 'DisplayName', 'average_max');
